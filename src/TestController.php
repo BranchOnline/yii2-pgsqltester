@@ -41,9 +41,6 @@ class TestController extends Controller {
     /** @var string The system module to run the tests for. */
     public $for_module = '';
 
-    /** @var MigrateController The controller to run the migrations. */
-    private $_migration;
-
     /** @inheritdoc */
     public function options($actionID) {
         return $actionID === 'run' ? ['suite', 'for_module'] : [];
@@ -68,7 +65,6 @@ class TestController extends Controller {
             throw new InvalidConfigException('No database component configured for \'db\'.');
         }
         $this->defaultAction = 'run';
-        $this->_migration    = new MigrateController('migrate', Yii::$app);
     }
 
     /**
@@ -104,9 +100,10 @@ class TestController extends Controller {
      */
     public function actionPrepareDb($force = false): bool {
         try {
-            if (true == $force || !$this->migrationStateMatches()) {
+            $migration_controller = new MigrateController('migrate', Yii::$app);
+            if (true == $force || !$this->migrationStateMatches($migration_controller)) {
                 print_r("Preparing the database...\n");
-                $this->prepareDb();
+                $this->prepareDb($migration_controller);
             } else {
                 print_r("Test database already in correct state.\n");
             }
@@ -267,15 +264,16 @@ class TestController extends Controller {
     /**
      * Checks whether the current state of the test database is the same as the state of the provided migrations.
      *
+     * @param Controller $migration_controller The migration console controller.
      * @return bool Whether the migration state is up to date.
      */
-    protected function migrationStateMatches(): bool {
+    protected function migrationStateMatches(Controller $migration_controller): bool {
         $result = Yii::$app->config_db->createCommand('SELECT 1 from pg_database WHERE datname=\'' . $this->testing_template_db . '\'')->queryScalar();
         if (false == $result) {
             return false;
         }
 
-        $dir             = opendir(Yii::getAlias($this->_migration->migrationPath));
+        $dir             = opendir(Yii::getAlias($migration_controller->migrationPath));
         $migration_files = [];
         while (false != ($file = readdir($dir))) {
             if ($file != '.' && $file != '..') {
@@ -290,7 +288,7 @@ class TestController extends Controller {
         try {
             $applied_migrations = (new Query())
                 ->select(['version'])
-                ->from($this->_migration->migrationTable)
+                ->from($migration_controller->migrationTable)
                 ->where('version != \'m000000_000000_base\'')
                 ->column();
         } catch (Exception $ex) {
@@ -310,17 +308,18 @@ class TestController extends Controller {
      * - Creates a template structure dump
      * - Creates a new empty test database from the structure dump
      *
+     * @param Controller $migration_controller The migration controller.
      * @throws Exception If a database exception occurs.
      * @return void
      */
-    protected function prepareDb() {
+    protected function prepareDb(Controller $migration_controller) {
         Yii::$app->db->close();
         Yii::$app->config_db->createCommand('DROP DATABASE IF EXISTS ' . $this->testing_template_db)->execute();
         Yii::$app->config_db->createCommand('DROP DATABASE IF EXISTS ' . $this->testing_db)->execute();
         Yii::$app->config_db->createCommand('CREATE DATABASE ' . $this->testing_template_db)->execute();
         Yii::$app->config_db->createCommand('CREATE DATABASE ' . $this->testing_db)->execute();
 
-        $this->_migration->runAction('up', [
+        $migration_controller->runAction('up', [
             'migrationPath' => $this->migration_path,
             'interactive'   => false
         ]);

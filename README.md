@@ -6,10 +6,29 @@ Automated setup of empty database and powerful console control of available test
 #### Example usage
 First set up the environment using the instructions in example setup below.
 
-Run all tests using ```>./yii_test test/run```
-Run all unit tests using ```>./yii_test test/run unit```
-Run all unit tests in module admin using ```>./yii_test test/run unit admin```
+Run all tests:
 
+ ```./yii_test test/run``` or ```>./yii_test test``` (action run is optional)
+
+Run all unit tests using:
+
+```./yii_test test/run unit```
+
+Run all unit tests in module admin using:
+
+```./yii_test test/run --for_module=admin```
+
+Run all unit tests in module admin from suite acceptance:
+
+```./yii_test test/run --suite=acceptance --for_module=admin```
+
+Run specific test by name:
+
+```./yii_test test/run TestName``` or just ```./yii_test test name```
+
+Force to remigrate the test database:
+
+```./yii_test test/prepare-db true```
 
 #### Example setup
 
