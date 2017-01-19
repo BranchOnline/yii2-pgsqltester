@@ -273,7 +273,7 @@ class TestController extends Controller {
             return false;
         }
 
-        $dir             = opendir(Yii::getAlias($migration_controller->migrationPath));
+        $dir             = opendir(Yii::getAlias($this->migration_path));
         $migration_files = [];
         while (false != ($file = readdir($dir))) {
             if ($file != '.' && $file != '..') {
