@@ -36,7 +36,7 @@ class TestController extends Controller {
     public $migration_path = '@console/migrations/';
 
     /** @var string The codeception suite to run the tests from. */
-    public $suite = 'unit';
+    public $suite = '';
 
     /** @var string The system module to run the tests for. */
     public $for_module = '';
@@ -44,6 +44,11 @@ class TestController extends Controller {
     /** @inheritdoc */
     public function options($actionID) {
         return $actionID === 'run' ? ['suite', 'for_module'] : [];
+    }
+
+    /** @inheritdoc */
+    public function optionAliases() {
+        return ['m' => 'for_module', 's' => 'suite'];
     }
 
     /**
@@ -65,6 +70,7 @@ class TestController extends Controller {
             throw new InvalidConfigException('No database component configured for \'db\'.');
         }
         $this->defaultAction = 'run';
+        $this->suite         = 'unit';
     }
 
     /**
