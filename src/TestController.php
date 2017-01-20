@@ -161,10 +161,10 @@ class TestController extends Controller {
                         $error = true;
                     } else {
                         $test_path = $class_paths[$selected];
-                        if ('' !== $raw_test_function) {
-                            $test_function = (1 === preg_match('/^test/', $raw_test_function)) ? $raw_test_function : 'test' . ucfirst($raw_test_function);
-                        }
                     }
+                }
+                if (''!== $test_path && '' !== $raw_test_function) {
+                    $test_function = (1 === preg_match('/^test/', $raw_test_function)) ? $raw_test_function : 'test' . ucfirst($raw_test_function);
                 }
             } else {
                 print_r("No test found for given test class '$test_class'\nA spelling error perhaps?\n");
