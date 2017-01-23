@@ -70,7 +70,6 @@ class TestController extends Controller {
             throw new InvalidConfigException('No database component configured for \'db\'.');
         }
         $this->defaultAction = 'run';
-        $this->suite         = 'unit';
     }
 
     /**
@@ -84,6 +83,9 @@ class TestController extends Controller {
      * @return void
      */
     public function actionRun($test_class = '', $test_function = '') {
+        if ($this->for_module !== '' && $this->suite === '') {
+            $this->suite = 'unit';
+        }
         if ($this->actionPrepareDb()) {
             $command = $this->prepareCodeceptCommand($test_class, $test_function);
             if (is_string($command)) {
