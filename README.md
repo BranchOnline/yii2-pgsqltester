@@ -8,23 +8,23 @@ First set up the environment using the instructions in example setup below.
 
 Run all tests:
 
- ```./yii_test test/run``` or ```>./yii_test test``` (action run is optional)
+ ```./yii_test test/run``` or ```./yii_test test``` (action run is default)
 
-Run all unit tests using:
+Run all unit tests using (only when you are not using modules, otherwise you have to specify the module):
 
-```./yii_test test/run unit```
+```./yii_test test -s=unit```
 
 Run all unit tests in module admin using:
 
-```./yii_test test/run --for_module=admin```
+```./yii_test test -m=admin```
 
 Run all unit tests in module admin from suite acceptance:
 
-```./yii_test test/run --suite=acceptance --for_module=admin```
+```./yii_test test -s=acceptance -m=admin```
 
 Run specific test by name:
 
-```./yii_test test/run TestName``` or just ```./yii_test test name```
+```./yii_test test TestName```
 
 Force to remigrate the test database:
 
