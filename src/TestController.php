@@ -41,14 +41,17 @@ class TestController extends Controller {
     /** @var string The system module to run the tests for. */
     public $for_module = '';
 
+    /** @var string The type of coverage to output, by default outputs no coverage. */
+    public $coverage = false;
+
     /** @inheritdoc */
     public function options($actionID) {
-        return $actionID === 'run' ? ['suite', 'for_module'] : [];
+        return $actionID === 'run' ? ['suite', 'for_module', 'coverage'] : [];
     }
 
     /** @inheritdoc */
     public function optionAliases() {
-        return ['m' => 'for_module', 's' => 'suite'];
+        return ['m' => 'for_module', 's' => 'suite', 'c' => 'coverage'];
     }
 
     /**
@@ -169,7 +172,7 @@ class TestController extends Controller {
                     $test_function = (1 === preg_match('/^test/', $raw_test_function)) ? $raw_test_function : 'test' . ucfirst($raw_test_function);
                 }
             } else {
-                print_r("No test found for given test class '$test_class'\nA spelling error perhaps?\n");
+                print_r("No test found for given test class '$test_class'\nPerhaps a spelling error? Or maybe you forgot to mention the suite?\n");
                 $error = true;
             }
         }
@@ -190,7 +193,8 @@ class TestController extends Controller {
         if ($suite !== '') {
             $command[] = $suite;
         }
-        if ($module !== '' || $test_path !== '' || $test_function !== '') {
+        $coverage = $this->coverage === false ? '' : '--coverage-html';
+        if ($module !== '' || $test_path !== '' || $test_function !== '' || $coverage !== '') {
             $command[] = '--';
             if ($module !== '') {
                 $command[] = "-c $module";
@@ -201,6 +205,9 @@ class TestController extends Controller {
                 } else {
                     $command[] = $test_path;
                 }
+            }
+            if ($coverage !== '') {
+                $command[] = $coverage;
             }
         }
         return implode(' ', $command);
