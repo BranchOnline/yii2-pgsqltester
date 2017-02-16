@@ -76,6 +76,16 @@ class TestController extends Controller {
     }
 
     /**
+     * Build the required classes for the different test suites.
+     *
+     * @return void
+     */
+    public function actionBuild() {
+        print_r("Building required classes\n");
+        passthru('composer exec codecept build');
+    }
+
+    /**
      * Runs the tests according to the given specifications.
      *
      * Also migrates the test database to the correct state if required.
