@@ -26,6 +26,8 @@ use yii\helpers\Console;
  */
 class TestController extends Controller {
 
+    const ALL_SUITES = 'ALL';
+
     /** @var string The name of the testing template database on which the migrations will be run. */
     public $testing_template_db = 'testing_template';
 
@@ -35,7 +37,8 @@ class TestController extends Controller {
     /** @var string The path to the migrations folder. */
     public $migration_path = '@console/migrations/';
 
-    /** @var string The codeception suite to run the tests from. */
+    /** @var string The codeception suite to run the tests from. Use the special keyword ALL to run all tests for a
+     * particular module. */
     public $suite = '';
 
     /** @var string The system module to run the tests for. */
@@ -96,7 +99,9 @@ class TestController extends Controller {
      * @return void
      */
     public function actionRun($test_class = '', $test_function = '') {
-        if ($this->for_module !== '' && $this->suite === '') {
+        if ($this->suite === static::ALL_SUITES) {
+            $this->suite = '';
+        } elseif ($this->for_module !== '' && $this->suite === '') {
             $this->suite = 'unit';
         }
         if ($this->actionPrepareDb()) {
