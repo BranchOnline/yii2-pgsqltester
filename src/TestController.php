@@ -26,6 +26,7 @@ use yii\helpers\Console;
  */
 class TestController extends Controller {
 
+    /** @var string Special keyword to run all suites. */
     const ALL_SUITES = 'ALL';
 
     /** @var string The name of the testing template database on which the migrations will be run. */
@@ -47,9 +48,12 @@ class TestController extends Controller {
     /** @var string The type of coverage to output, by default outputs no coverage. */
     public $coverage = false;
 
+    /** @var bool Whether to run in silent mode (no output will be shown) */
+    public $silent = false;
+
     /** @inheritdoc */
     public function options($actionID) {
-        return $actionID === 'run' ? ['suite', 'for_module', 'coverage'] : [];
+        return $actionID === 'run' ? ['suite', 'for_module', 'coverage', 'silent'] : [];
     }
 
     /** @inheritdoc */
@@ -205,6 +209,9 @@ class TestController extends Controller {
      */
     protected function formatTestCommand($module, $suite, $test_path, $test_function) {
         $command = ['composer exec codecept run'];
+        if (!$this->silent) {
+            $command[] = '-v';
+        }
         if ($suite !== '') {
             $command[] = $suite;
         }
