@@ -4,6 +4,7 @@ namespace branchonline\pgsqltester;
 
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
+use Yii;
 use yii\base\InvalidCallException;
 use yii\base\InvalidConfigException;
 use yii\base\InvalidParamException;
@@ -11,7 +12,6 @@ use yii\console\Controller;
 use yii\console\controllers\MigrateController;
 use yii\db\Exception;
 use yii\db\Query;
-use Yii;
 use yii\helpers\Console;
 
 /**
@@ -89,7 +89,7 @@ class TestController extends Controller {
      */
     public function actionBuild() {
         print_r("Building required classes\n");
-        passthru('composer exec codecept build');
+        passthru('composer -v exec codecept build');
     }
 
     /**
@@ -208,7 +208,7 @@ class TestController extends Controller {
      * @return string The complete test command.
      */
     protected function formatTestCommand($module, $suite, $test_path, $test_function) {
-        $command = ['composer exec codecept run'];
+        $command = ['composer -v exec codecept run'];
         if (!$this->silent) {
             $command[] = '-v';
         }
