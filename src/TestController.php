@@ -89,7 +89,11 @@ class TestController extends Controller {
      */
     public function actionBuild() {
         print_r("Building required classes\n");
-        passthru('composer exec codecept build');
+        if (!$this->silent) {
+            passthru('composer exec codecept build -v');
+        } else {
+            passthru('composer exec codecept build');
+        }
     }
 
     /**
