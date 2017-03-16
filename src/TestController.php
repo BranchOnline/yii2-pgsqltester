@@ -257,12 +257,36 @@ class TestController extends Controller {
         $file_name = array_pop($parts);
         $file_name = preg_replace('/test(.php)?$/', '', strtolower($file_name));
         $index     =  $this->getTestIndexForModule();
-        $options   = $index[$this->suite][$file_name] ?? [];
-        if (sizeof($options) === 0) {
-            return false;
+        return $this->lookupClassInIndex($file_name, $index);
+    }
+
+    /**
+     * Lookup a class in the given index. If a single test is found to match and no suite is set, automatically finds
+     * and sets the suite.
+     *
+     * @param string $class_name The class name to be found.
+     * @param array  $index      The file index to look through.
+     * @return false|array False if no test can be found to match, or an array if there exists matching tests.
+     */
+    protected function lookupClassInIndex(string $class_name, array $index) {
+        $options = [];
+        if ($this->suite === '') {
+            $required_suites = [];
+            foreach ($index as $suite_index => $class_indices) {
+                foreach ($class_indices as $class_index => $associated_files) {
+                    if ($class_name === $class_index) {
+                        $options[] = $index[$suite_index][$class_index][0];
+                        $required_suites[] = $suite_index;
+                    }
+                }
+            }
+            if (sizeof($required_suites) === 1) {
+                $this->suite = $required_suites[0];
+            }
         } else {
-            return $options;
+            $options = $index[$this->suite][$class_name];
         }
+        return sizeof($options) === 0 ? false : $options;
     }
 
     /**
