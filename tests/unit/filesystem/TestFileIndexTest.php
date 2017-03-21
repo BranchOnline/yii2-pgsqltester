@@ -23,10 +23,10 @@ class TestFileIndexTest extends Unit {
         $this->assertSame($base_dir, $index->getBaseDir());
 
         $this->assertSame([
-            'classb' => '/subsystemA/ClassBTest.php',
             'classa' => '/subsystemA/ClassATest.php',
-            'classd' => '/subsystemB/ClassDTest.php',
+            'classb' => '/subsystemA/ClassBTest.php',
             'classc' => '/subsystemB/ClassCTest.php',
+            'classd' => '/subsystemB/ClassDTest.php',
         ], $index->getIndexedFiles());
     }
 

@@ -55,6 +55,9 @@ class TestFileIndex {
                 $files[$test_name] = $relative_path;
             }
         }
+
+        ksort($files);
+
         $this->_indexed_files = $files;
     }
 
