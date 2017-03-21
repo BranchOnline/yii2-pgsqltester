@@ -2,6 +2,8 @@
 
 namespace branchonline\pgsqltester;
 
+use branchonline\pgsqltester\cmd\BuildCommand;
+use branchonline\pgsqltester\cmd\RunCommand;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
 use yii\base\InvalidCallException;
@@ -89,11 +91,8 @@ class TestController extends Controller {
      */
     public function actionBuild() {
         print_r("Building required classes\n");
-        if (!$this->silent) {
-            passthru('composer exec codecept build -v');
-        } else {
-            passthru('composer exec codecept build');
-        }
+        $command_string = (new BuildCommand($this->silent))->getCommandString();
+        passthru($command_string);
     }
 
     /**
@@ -199,44 +198,19 @@ class TestController extends Controller {
                 $error = true;
             }
         }
-        return $error ? false : $this->formatTestCommand($this->for_module, $this->suite, $test_path, $test_function);
-    }
-
-    /**
-     * Formats a complete command from the given parts.
-     *
-     * @param string $module        The module for which to run the tests.
-     * @param string $suite         The suite from which to run the tests.
-     * @param string $test_path     The full path to the test class to be run.
-     * @param string $test_function The test function from the class to be run.
-     * @return string The complete test command.
-     */
-    protected function formatTestCommand($module, $suite, $test_path, $test_function) {
-        $command = ['composer exec codecept run'];
-        if (!$this->silent) {
-            $command[] = '-v';
+        if ($error) {
+            return false;
+        } else {
+            $command = new RunCommand(
+                $this->for_module,
+                $this->suite,
+                $test_path,
+                $test_function,
+                $this->coverage,
+                $this->silent
+            );
+            return $command->getCommandString();
         }
-        if ($suite !== '') {
-            $command[] = $suite;
-        }
-        $coverage = $this->coverage === false ? '' : '--coverage-html';
-        if ($module !== '' || $test_path !== '' || $test_function !== '' || $coverage !== '') {
-            $command[] = '--';
-            if ($module !== '') {
-                $command[] = "-c $module";
-            }
-            if ($test_path !== '') {
-                if ($test_function !== '') {
-                    $command[] = "$test_path::$test_function";
-                } else {
-                    $command[] = $test_path;
-                }
-            }
-            if ($coverage !== '') {
-                $command[] = $coverage;
-            }
-        }
-        return implode(' ', $command);
     }
 
     /**
