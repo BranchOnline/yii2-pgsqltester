@@ -18,13 +18,23 @@ class TestFileTest extends Unit {
 
     public function gettersProvider() {
         return [
-            ['/tests/ClassATest.php', null, null, 'classa', false],
-            ['tests/ClassATest.php', null, null, 'classa', false],
-            ['tests/unit/ClassATest.php', 'unit', null, 'classa', true],
-            ['tests/integration/ClassATest.php', 'integration', null, 'classa', true],
-            ['/common/tests/unit/ClassATest.php', 'unit', 'common', 'classa', true],
-            ['common/tests/unit/ClassATest.php', 'unit', 'common', 'classa', true],
+            [static::path('/tests/ClassATest.php'), null, null, 'classa', false],
+            [static::path('tests/ClassATest.php'), null, null, 'classa', false],
+            [static::path('tests/unit/ClassATest.php'), 'unit', null, 'classa', true],
+            [static::path('tests/integration/ClassATest.php'), 'integration', null, 'classa', true],
+            [static::path('/common/tests/unit/ClassATest.php'), 'unit', 'common', 'classa', true],
+            [static::path('common/tests/unit/ClassATest.php'), 'unit', 'common', 'classa', true],
         ];
+    }
+
+    protected static function path(string $path): string {
+        if (DIRECTORY_SEPARATOR === '/') {
+            return str_replace('\\', DIRECTORY_SEPARATOR, $path);
+        } elseif (DIRECTORY_SEPARATOR === '\\') {
+            return str_replace('/', DIRECTORY_SEPARATOR, $path);
+        } else {
+            return $path;
+        }
     }
 
 }
