@@ -18,7 +18,7 @@ class TestFileIndexTest extends Unit {
     }
 
     public function testIndexTestClasses() {
-        $base_dir = codecept_data_dir() . 'tests';
+        $base_dir = codecept_data_dir() . '_fake_app_base_dir/tests';
         $index = new TestFileIndex($base_dir);
         $this->assertSame($base_dir, $index->getBaseDir());
 
