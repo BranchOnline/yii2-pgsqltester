@@ -20,7 +20,7 @@ class TestFileIndexTest extends Unit {
     public function testNumIndexedFiles() {
         $indexed_files = $this->_getFakeAppBaseDirTestIndex();
 
-        $this->assertSame(8, $indexed_files->getNumIndexedFiles());
+        $this->assertSame(9, $indexed_files->getNumIndexedFiles());
         foreach ($indexed_files->getFiles() as $file) {
             $this->assertInstanceOf(TestFile::class, $file);
         }

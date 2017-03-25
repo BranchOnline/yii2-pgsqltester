@@ -7,13 +7,13 @@ namespace branchonline\pgsqltester\cmd;
  *
  * @author Roelof Ruis <roelof@branchonline.nl>
  */
-interface CodeceptCommand {
+interface CodeceptCommandConstructor {
 
     /**
      * Return the command that is built by this command director.
      *
      * @return string
      */
-    public function getCommandString(): string;
+    public function getCommand(): string;
 
 }

@@ -61,6 +61,10 @@ class TestFileIndex {
             }
         }
 
+        usort($files, function($a, $b) {
+            return $a->getRelativePath() <=> $b->getRelativePath();
+        });
+
         return $files;
     }
 

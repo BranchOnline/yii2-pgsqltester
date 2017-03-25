@@ -2,8 +2,8 @@
 
 namespace branchonline\pgsqltester;
 
-use branchonline\pgsqltester\cmd\BuildCommand;
-use branchonline\pgsqltester\cmd\RunCommand;
+use branchonline\pgsqltester\cmd\BuildCommandConstructor;
+use branchonline\pgsqltester\cmd\RunCommandConstructor;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
 use yii\base\InvalidCallException;
@@ -91,7 +91,7 @@ class TestController extends Controller {
      */
     public function actionBuild() {
         print_r("Building required classes\n");
-        $command_string = (new BuildCommand($this->silent))->getCommandString();
+        $command_string = (new BuildCommandConstructor($this->silent))->getCommand();
         passthru($command_string);
     }
 
@@ -156,6 +156,8 @@ class TestController extends Controller {
     /**
      * Prepare a codeception argument string to run specific tests only.
      *
+     * @todo: Use TestLookup class and refactor accordingly.
+     *
      * @param string $module            The system module to run the tests for.
      * @param string $test_class        The name of the test class that you want to run.
      * @param string $raw_test_function The name of the test function that you want to run.
@@ -201,7 +203,7 @@ class TestController extends Controller {
         if ($error) {
             return false;
         } else {
-            $command = new RunCommand(
+            $constructor = new RunCommandConstructor(
                 $this->for_module,
                 $this->suite,
                 $test_path,
@@ -209,12 +211,15 @@ class TestController extends Controller {
                 $this->coverage,
                 $this->silent
             );
-            return $command->getCommandString();
+            return $constructor->getCommand();
         }
     }
 
     /**
      * Lookup whether there is a test that is specified by the given class name.
+     *
+     * @todo: Remove this function.
+     * @deprecated Use new filesystem classes
      *
      * @param string $class_name The name of the class, accepts simpel names,
      * with or without Test/extension or fully qualified paths.
@@ -241,6 +246,9 @@ class TestController extends Controller {
     /**
      * Lookup a class in the given index. If a single test is found to match and no suite is set, automatically finds
      * and sets the suite.
+     *
+     * @todo: Remove this function.
+     * @deprecated Use new filesystem classes
      *
      * @param string $class_name The class name to be found.
      * @param array  $index      The file index to look through.
@@ -269,6 +277,9 @@ class TestController extends Controller {
 
     /**
      * Builds a test index used for looking up the tests on a given class.
+     *
+     * @todo: Remove this function.
+     * @deprecated Use new filesystem classes
      *
      * @return array The test index.
      */
@@ -302,6 +313,8 @@ class TestController extends Controller {
 
     /**
      * Checks whether the current state of the test database is the same as the state of the provided migrations.
+     *
+     * @todo: Move to separate class.
      *
      * @param Controller $migration_controller The migration console controller.
      * @return bool Whether the migration state is up to date.
@@ -340,6 +353,8 @@ class TestController extends Controller {
 
     /**
      * Internally prepares a test database.
+     *
+     * @todo: Move to separate class.
      *
      * The steps:
      * - Creates a new template database
