@@ -32,30 +32,12 @@ class TestLookup {
     /**
      * Lookup a particular test or set of tests.
      *
-     * @param string|null $test_name   The name of a test to look up, or null if no
-     * specific test is required.
-     * @param string|null $test_suite  The suite name or null if no suite selected.
-     * @param string|null $test_module The module name or null if no module selected.
+     * @param TestRequest $request The request specifying the test(s) to be found.
      * @return TestBatch The test batch to be executed.
      */
-    public function lookup($test_name = null, $test_suite = null, $test_module = null): TestBatch {
-        $search = new TestFileSearch();
-
-        if (is_string($test_name)) {
-            $search->matches($test_name, 1);
-        }
-
-        if (is_string($test_suite)) {
-            $search->inSuite($test_suite);
-        }
-
-        if (is_string($test_module)) {
-            $search->inModule($test_module);
-        }
-
-        $test_files = $search->findInIndex($this->_index);
-
-        return new TestBatch($test_files, null !== $test_name, null !== $test_suite);
+    public function lookup(TestRequest $request): TestBatch {
+        $test_files = TestFileSearch::findInIndex($this->_index, $request, 1);
+        return new TestBatch($test_files, $request);
     }
 
 }

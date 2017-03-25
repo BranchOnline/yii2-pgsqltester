@@ -3,77 +3,32 @@
 namespace branchonline\pgsqltester\filesystem;
 
 /**
- * Object to search over arrays of test files.
+ * Search based on a given file index and request.
  *
  * @author Roelof Ruis <roelof@branchonline.nl>
  */
 class TestFileSearch {
 
-    /** @var int The maximum allowed levenshtein distance. */
-    private $_max_distance = 0;
-
-    /** @var string|null The name to be matched by the file index. Null if no restriction on name applies. */
-    private $_name = null;
-
-    /** @var string|null The suite to be matched by the file. NULL if no restriction on suite applies. */
-    private $_suite = null;
-
-    /** @var string|null The module to be matched by the file. NULL if no restriction on module applies. */
-    private $_module = null;
-
     /**
-     * Make the search match files with the given name.
+     * Find a selection of files based on a given request.
      *
-     * @param string $name                The name to be matched.
-     * @param int    $max_string_distance The max string distance, default to 0 which is an exact match.
-     * @return self
-     */
-    public function matches(string $name, int $max_string_distance = 0): self {
-        $this->_name = $name;
-        $this->_max_distance = $max_string_distance;
-        return $this;
-    }
-
-    /**
-     * Only find test files in the specified suite.
-     *
-     * @param string $suite The suite to be matched.
-     * @return self
-     */
-    public function inSuite(string $suite): self {
-        $this->_suite = $suite;
-        return $this;
-    }
-
-    /**
-     * Only find test files in the specified module.
-     *
-     * @param string $module The module to be matched.
-     * @return self
-     */
-    public function inModule(string $module): self {
-        $this->_module = $module;
-        return $this;
-    }
-
-    /**
-     * Find a selection of files.
-     *
-     * @param TestFileIndex $index The index to search through.
+     * @param TestFileIndex $index               The index to search through.
+     * @param TestRequest   $request             Specifying the request data.
+     * @param int           $max_string_distance Controlls the maximum levenshtein distance for fuzzy matching.
      * @return TestFile[] Array with matching files.
      */
-    public function findInIndex(TestFileIndex $index): array {
+    public static function findInIndex(TestFileIndex $index, TestRequest $request, $max_string_distance = 0): array {
         $matches         = [];
         $string_distance = 0;
-        while ($string_distance <= $this->_max_distance) {
+        while ($string_distance <= $max_string_distance) {
             foreach ($index->getFiles() as $file) {
-                if (is_string($this->_name) && !$this->_stringsMatch($file->getIndex(), $this->_name, $string_distance)) {
+                if ($request->requestsName() && !static::_stringsMatch($file->getIndex(), $request->getName(), $string_distance)) {
                     continue;
                 }
-                if (is_string($this->_suite) && !($file->getSuite() === $this->_suite)) {
+                if ($request->requestsSuite() && !($file->getSuite() === $request->getSuite())) {
                     continue;
                 }
-                if (is_string($this->_module) && !($file->getModule() === $this->_module)) {
+                if ($request->requestsModule() && !($file->getModule() === $request->getModule())) {
                     continue;
                 }
                 $matches[] = $file;
@@ -94,7 +49,7 @@ class TestFileSearch {
      * @param int    $max_string_distance The maximum allowed string distance.
      * @return bool Whether the strings match.
      */
-    private function _stringsMatch(string $string1, string $string2, int $max_string_distance = 0) {
+    private static function _stringsMatch(string $string1, string $string2, int $max_string_distance = 0) {
         if (0 === $max_string_distance) {
             return $string1 === $string2;
         } else {

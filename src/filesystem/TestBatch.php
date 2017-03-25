@@ -12,11 +12,8 @@ class TestBatch {
     /** @var TestFile[] The test files in this batch. */
     private $_files;
 
-    /** @var bool Whether the name of the testing files was specified. */
-    private $_name_is_specified;
-
-    /** @var bool Whether the suite of the testing files was specified. */
-    private $_suite_is_specified;
+    /** @var TestRequest The test request that was used to create this batch. */
+    private $_request;
 
     /** @var array Array with all suites required to run this batch. */
     private $_required_suites;
@@ -29,10 +26,9 @@ class TestBatch {
      *
      * @param TestFile[] $files The tests to be included.
      */
-    public function __construct(array $files, $is_name_specified, $is_suite_specified) {
-        $this->_files = $files;
-        $this->_name_is_specified = $is_name_specified;
-        $this->_suite_is_specified = $is_suite_specified;
+    public function __construct(array $files, TestRequest $request) {
+        $this->_files   = $files;
+        $this->_request = $request;
         $this->_prepareSuitesAndModules();
     }
 
@@ -46,10 +42,10 @@ class TestBatch {
         if ($this->isEmpty()) {
             return false;
         }
-        if ($this->_name_is_specified && ($this->hasMultipleRequiredSuites() || $this->hasMultipleRequiredModules())) {
+        if ($this->_request->requestsName() && ($this->hasMultipleRequiredSuites() || $this->hasMultipleRequiredModules())) {
             return false;
         }
-        if ($this->_suite_is_specified && ($this->hasMultipleRequiredModules())) {
+        if ($this->_request->requestsSuite() && ($this->hasMultipleRequiredModules())) {
             return false;
         }
         return true;
@@ -61,7 +57,7 @@ class TestBatch {
             return false;
         }
 
-        if (!$this->_name_is_specified || !isset($this->_files[0])) {
+        if (!$this->_request->requestsName() || !isset($this->_files[0])) {
             return null;
         } else {
             return $this->_files[0]->getRelativePath();
@@ -118,16 +114,6 @@ class TestBatch {
     /** @return bool Whether this batch is empty. */
     public function isEmpty(): bool {
         return [] === $this->_files;
-    }
-
-    /** @return int The number of files in this batch */
-    public function getSize(): int {
-        return sizeof($this->getFiles());
-    }
-
-    /** @return TestFile[] The test files in this batch. */
-    public function getFiles(): array {
-        return $this->_files;
     }
 
     /** Determine the set of all suits and all modules for this batch. Grouped so it allows a single for-loop. */

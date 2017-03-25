@@ -9,104 +9,110 @@ use Codeception\Test\Unit;
  */
 class TestFileSearchTest extends Unit {
 
-    public function testFindInIndex() {
+    /** @dataProvider findInIndexProvider() */
+    public function testFindInIndex($request, $expected) {
         $index = $this->_getFakeAppBaseDirTestIndex();
 
-        $matches = (new TestFileSearch())
-            ->matches('classd')
-            ->findInIndex($index);
-        $this->assertSame(1, sizeof($matches));
-        $this->assertSame(static::path('/tests/unit/subsystemB/ClassDTest.php'), $matches[0]->getRelativePath());
-
-        $matches = (new TestFileSearch())
-            ->matches('classb')
-            ->findInIndex($index);
-        $this->assertSame(2, sizeof($matches));
-        $this->assertSame(static::path('/moduleA/tests/unit/subsystemA/ClassBTest.php'), $matches[0]->getRelativePath());
-        $this->assertSame(static::path('/tests/unit/subsystemA/ClassBTest.php'), $matches[1]->getRelativePath());
-
-        $matches = (new TestFileSearch())
-            ->matches('classa')
-            ->findInIndex($index);
-        $this->assertSame(3, sizeof($matches));
-        $this->assertSame(static::path('/moduleA/tests/unit/subsystemA/ClassATest.php'), $matches[0]->getRelativePath());
-        $this->assertSame(static::path('/tests/integration/ClassATest.php'), $matches[1]->getRelativePath());
-        $this->assertSame(static::path('/tests/unit/subsystemA/ClassATest.php'), $matches[2]->getRelativePath());
+        $matches = TestFileSearch::findInIndex($index, $request, 1);
+        $this->assertSame(sizeof($expected), sizeof($matches));
+        foreach ($matches as $index => $result) {
+            $this->assertSame($result->getRelativePath(), $expected[$index]);
+        }
     }
 
-    public function testFindModuleOnly() {
-        $index = $this->_getFakeAppBaseDirTestIndex();
-
-        $matches = (new TestFileSearch())
-            ->inModule('moduleA')
-            ->findInIndex($index);
-
-        $this->assertSame(4, sizeof($matches));
-        $this->assertSame(static::path('/moduleA/tests/style/ClassETest.php'), $matches[0]->getRelativePath());
-        $this->assertSame(static::path('/moduleA/tests/unit/subsystemA/ClassATest.php'), $matches[1]->getRelativePath());
-        $this->assertSame(static::path('/moduleA/tests/unit/subsystemA/ClassBTest.php'), $matches[2]->getRelativePath());
-        $this->assertSame(static::path('/moduleA/tests/unit/subsystemA/ClassCTest.php'), $matches[3]->getRelativePath());
-    }
-
-    public function testFindFuzzyInIndex() {
-        $index = $this->_getFakeAppBaseDirTestIndex();
-
-        $matches = (new TestFileSearch())
-            ->matches('clasd', 0)
-            ->findInIndex($index);
-        $this->assertSame([], $matches);
-
-        $matches = (new TestFileSearch())
-            ->matches('clasd', 1)
-            ->findInIndex($index);
-        $this->assertSame(1, sizeof($matches));
-        $this->assertSame(static::path('/tests/unit/subsystemB/ClassDTest.php'), $matches[0]->getRelativePath());
-
-        $matches = (new TestFileSearch())
-            ->matches('classd', 1)
-            ->findInIndex($index);
-        $this->assertSame(1, sizeof($matches));
-        $this->assertSame(static::path('/tests/unit/subsystemB/ClassDTest.php'), $matches[0]->getRelativePath());
-    }
-
-    public function testFindWithSuiteInIndex() {
-        $index = $this->_getFakeAppBaseDirTestIndex();
-
-        $matches = (new TestFileSearch())
-            ->matches('classa')
-            ->inSuite('unit')
-            ->findInIndex($index);
-
-        $this->assertSame(2, sizeof($matches));
-        $this->assertSame(static::path('/moduleA/tests/unit/subsystemA/ClassATest.php'), $matches[0]->getRelativePath());
-        $this->assertSame(static::path('/tests/unit/subsystemA/ClassATest.php'), $matches[1]->getRelativePath());
-
-        $matches = (new TestFileSearch())
-            ->matches('classa')
-            ->inSuite('integration')
-            ->findInIndex($index);
-
-        $this->assertSame(1, sizeof($matches));
-        $this->assertSame(static::path('/tests/integration/ClassATest.php'), $matches[0]->getRelativePath());
-    }
-
-    public function testFindWithModuleInIndex() {
-        $index = $this->_getFakeAppBaseDirTestIndex();
-
-        $matches = (new TestFileSearch())
-            ->matches('classa')
-            ->inModule('moduleA')
-            ->findInIndex($index);
-
-        $this->assertSame(1, sizeof($matches));
-        $this->assertSame(static::path('/moduleA/tests/unit/subsystemA/ClassATest.php'), $matches[0]->getRelativePath());
-
-        $matches = (new TestFileSearch())
-            ->matches('classa')
-            ->inModule('not existing module')
-            ->findInIndex($index);
-
-        $this->assertSame(0, sizeof($matches));
+    public function findInIndexProvider() {
+        return [
+            'All tests' => [
+                new TestRequest(null, null, null),
+                [
+                    static::path('/moduleA/tests/style/ClassETest.php'),
+                    static::path('/moduleA/tests/unit/subsystemA/ClassATest.php'),
+                    static::path('/moduleA/tests/unit/subsystemA/ClassBTest.php'),
+                    static::path('/moduleA/tests/unit/subsystemA/ClassCTest.php'),
+                    static::path('/tests/integration/ClassATest.php'),
+                    static::path('/tests/unit/subsystemA/ClassATest.php'),
+                    static::path('/tests/unit/subsystemA/ClassBTest.php'),
+                    static::path('/tests/unit/subsystemB/ClassCTest.php'),
+                    static::path('/tests/unit/subsystemB/ClassDTest.php'),
+                ]
+            ],
+            'All Class EEE' => [
+                new TestRequest('classeee', null, null),
+                []
+            ],
+            'All Misspelled Class A' => [
+                new TestRequest('clasa', null, null),
+                [
+                    static::path('/moduleA/tests/unit/subsystemA/ClassATest.php'),
+                    static::path('/tests/integration/ClassATest.php'),
+                    static::path('/tests/unit/subsystemA/ClassATest.php'),
+                ]
+            ],
+            'All Class A' => [
+                new TestRequest('classa', null, null),
+                [
+                    static::path('/moduleA/tests/unit/subsystemA/ClassATest.php'),
+                    static::path('/tests/integration/ClassATest.php'),
+                    static::path('/tests/unit/subsystemA/ClassATest.php'),
+                ]
+            ],
+            'All in unit' => [
+                new TestRequest(null, 'unit', null),
+                [
+                    static::path('/moduleA/tests/unit/subsystemA/ClassATest.php'),
+                    static::path('/moduleA/tests/unit/subsystemA/ClassBTest.php'),
+                    static::path('/moduleA/tests/unit/subsystemA/ClassCTest.php'),
+                    static::path('/tests/unit/subsystemA/ClassATest.php'),
+                    static::path('/tests/unit/subsystemA/ClassBTest.php'),
+                    static::path('/tests/unit/subsystemB/ClassCTest.php'),
+                    static::path('/tests/unit/subsystemB/ClassDTest.php'),
+                ]
+            ],
+            'All in integration' => [
+                new TestRequest(null, 'integration', null),
+                [
+                    static::path('/tests/integration/ClassATest.php'),
+                ]
+            ],
+            'All in module A' => [
+                new TestRequest(null, null, 'moduleA'),
+                [
+                    static::path('/moduleA/tests/style/ClassETest.php'),
+                    static::path('/moduleA/tests/unit/subsystemA/ClassATest.php'),
+                    static::path('/moduleA/tests/unit/subsystemA/ClassBTest.php'),
+                    static::path('/moduleA/tests/unit/subsystemA/ClassCTest.php'),
+                ]
+            ],
+            'All in module B' => [
+                new TestRequest(null, null, 'moduleB'),
+                [],
+            ],
+            'All Class A in suite unit' => [
+                new TestRequest('classa', 'unit', null),
+                [
+                    static::path('/moduleA/tests/unit/subsystemA/ClassATest.php'),
+                    static::path('/tests/unit/subsystemA/ClassATest.php'),
+                ]
+            ],
+            'All Class A in module A' => [
+                new TestRequest('classa', null, 'moduleA'),
+                [
+                    static::path('/moduleA/tests/unit/subsystemA/ClassATest.php'),
+                ]
+            ],
+            'All in module A in suite style' => [
+                new TestRequest(null, 'style', 'moduleA'),
+                [
+                    static::path('/moduleA/tests/style/ClassETest.php'),
+                ]
+            ],
+            'All Class A in suite unit in module A' => [
+                new TestRequest('classa', 'unit', 'moduleA'),
+                [
+                    static::path('/moduleA/tests/unit/subsystemA/ClassATest.php'),
+                ]
+            ],
+        ];
     }
 
     private function _getFakeAppBaseDirTestIndex(): TestFileIndex {
