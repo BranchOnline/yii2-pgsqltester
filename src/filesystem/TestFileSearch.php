@@ -12,8 +12,8 @@ class TestFileSearch {
     /** @var int The maximum allowed levenshtein distance. */
     private $_max_distance = 0;
 
-    /** @var string The string to be matched by the file index. */
-    private $_match_string = '';
+    /** @var string|null The name to be matched by the file index. Null if no restriction on name applies. */
+    private $_name = null;
 
     /** @var string|null The suite to be matched by the file. NULL if no restriction on suite applies. */
     private $_suite = null;
@@ -29,7 +29,7 @@ class TestFileSearch {
      * @return self
      */
     public function matches(string $name, int $max_string_distance = 0): self {
-        $this->_match_string = $name;
+        $this->_name = $name;
         $this->_max_distance = $max_string_distance;
         return $this;
     }
@@ -67,7 +67,7 @@ class TestFileSearch {
         $string_distance = 0;
         while ($string_distance <= $this->_max_distance) {
             foreach ($index->getFiles() as $file) {
-                if (!$this->_stringsMatch($file->getIndex(), $this->_match_string, $string_distance)) {
+                if (is_string($this->_name) && !$this->_stringsMatch($file->getIndex(), $this->_name, $string_distance)) {
                     continue;
                 }
                 if (is_string($this->_suite) && !($file->getSuite() === $this->_suite)) {

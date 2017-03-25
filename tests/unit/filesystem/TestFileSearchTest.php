@@ -34,6 +34,15 @@ class TestFileSearchTest extends Unit {
         $this->assertSame(static::path('/tests/unit/subsystemA/ClassATest.php'), $matches[2]->getRelativePath());
     }
 
+    public function testFindModuleOnly() {
+        $index = $this->_getFakeAppBaseDirTestIndex();
+
+        $matches = (new TestFileSearch())
+            ->inModule('moduleA')
+            ->findInIndex($index);
+        $this->assertSame(static::path('/moduleA/tests/unit/subsystemA/ClassATest.php'), $matches[0]->getRelativePath());
+    }
+
     public function testFindFuzzyInIndex() {
         $index = $this->_getFakeAppBaseDirTestIndex();
 
