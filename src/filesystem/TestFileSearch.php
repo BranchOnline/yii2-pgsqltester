@@ -18,6 +18,9 @@ class TestFileSearch {
     /** @var string|null The suite to be matched by the file. NULL if no restriction on suite applies. */
     private $_suite = null;
 
+    /** @var string|null The module to be matched by the file. NULL if no restriction on module applies. */
+    private $_module = null;
+
     /**
      * Make the search match files with the given name.
      *
@@ -43,6 +46,17 @@ class TestFileSearch {
     }
 
     /**
+     * Only find test files in the specified module.
+     *
+     * @param string $module The module to be matched.
+     * @return self
+     */
+    public function inModule(string $module): self {
+        $this->_module = $module;
+        return $this;
+    }
+
+    /**
      * Find a selection of files.
      *
      * @param TestFileIndex $index The index to search through.
@@ -57,6 +71,9 @@ class TestFileSearch {
                     continue;
                 }
                 if (is_string($this->_suite) && !($file->getSuite() === $this->_suite)) {
+                    continue;
+                }
+                if (is_string($this->_module) && !($file->getModule() === $this->_module)) {
                     continue;
                 }
                 $matches[] = $file;

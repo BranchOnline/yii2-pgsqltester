@@ -76,6 +76,25 @@ class TestFileSearchTest extends Unit {
         $this->assertSame(static::path('/tests/integration/ClassATest.php'), $matches[0]->getRelativePath());
     }
 
+    public function testFindWithModuleInIndex() {
+        $index = $this->_getFakeAppBaseDirTestIndex();
+
+        $matches = (new TestFileSearch())
+            ->matches('classa')
+            ->inModule('moduleA')
+            ->findInIndex($index);
+
+        $this->assertSame(1, sizeof($matches));
+        $this->assertSame(static::path('/moduleA/tests/unit/subsystemA/ClassATest.php'), $matches[0]->getRelativePath());
+
+        $matches = (new TestFileSearch())
+            ->matches('classa')
+            ->inModule('not existing module')
+            ->findInIndex($index);
+
+        $this->assertSame(0, sizeof($matches));
+    }
+
     private function _getFakeAppBaseDirTestIndex(): TestFileIndex {
         $base_dir = codecept_data_dir() . '_fake_app_base_dir';
         return new TestFileIndex($base_dir);
