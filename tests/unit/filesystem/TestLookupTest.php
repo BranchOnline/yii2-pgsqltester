@@ -21,10 +21,14 @@ class TestLookupTest extends Unit {
         $batch = $lookup->lookup($request);
 
         $this->assertInstanceOf(TestBatch::class, $batch);
-        $this->assertSame($expected['can_run'], $batch->canRun());
-        $this->assertSame($expected['name'], $batch->getNameToRun());
-        $this->assertSame($expected['suite'], $batch->getSuiteToRun());
-        $this->assertSame($expected['module'], $batch->getModuleToRun());
+        if ($expected['can_run']) {
+            $this->assertTrue($batch->canRun());
+            $this->assertSame($expected['name'], $batch->getFilesToRun());
+            $this->assertSame($expected['suite'], $batch->getSuitesToRun());
+            $this->assertSame($expected['module'], $batch->getModulesToRun());
+        } else {
+            $this->assertFalse($batch->canRun());
+        }
     }
 
     public function canRunProvider() {
@@ -33,18 +37,12 @@ class TestLookupTest extends Unit {
                 new TestRequest('classb', null, 'moduleA'),
                 [
                     'can_run' => false,
-                    'name'    => false,
-                    'suite'   => false,
-                    'module'  => false,
                 ]
             ],
             'All in suite unit' => [
                 new TestRequest(null, 'unit', null),
                 [
                     'can_run' => false,
-                    'name'    => false,
-                    'suite'   => false,
-                    'module'  => false,
                 ]
             ],
             'All in suite style' => [
@@ -52,8 +50,8 @@ class TestLookupTest extends Unit {
                 [
                     'can_run' => true,
                     'name'    => null,
-                    'suite'   => 'style',
-                    'module'  => 'moduleA',
+                    'suite'   => ['style'],
+                    'module'  => ['moduleA'],
                 ]
             ],
             'All in module A in suite style' => [
@@ -61,8 +59,8 @@ class TestLookupTest extends Unit {
                 [
                     'can_run' => true,
                     'name'    => null,
-                    'suite'   => 'unit',
-                    'module'  => 'moduleA',
+                    'suite'   => ['unit'],
+                    'module'  => ['moduleA'],
                 ]
             ],
             'All in module A' => [
@@ -71,33 +69,30 @@ class TestLookupTest extends Unit {
                     'can_run' => true,
                     'name'    => null,
                     'suite'   => null,
-                    'module'  => 'moduleA',
+                    'module'  => ['moduleA'],
                 ]
             ],
             'All Class A in suite unit in module A' => [
                 new TestRequest('classa', 'unit', 'moduleA'),
                 [
                     'can_run' => true,
-                    'name'    => static::path('/moduleA/tests/unit/subsystemA/ClassATest.php'),
-                    'suite'   => 'unit',
-                    'module'  => 'moduleA',
+                    'name'    => [static::path('/moduleA/tests/unit/subsystemA/ClassATest.php')],
+                    'suite'   => ['unit'],
+                    'module'  => ['moduleA'],
                 ]
             ],
             'All Class A in suite unit' => [
                 new TestRequest('classa', 'unit', null),
                 [
                     'can_run' => false,
-                    'name'    => false,
-                    'suite'   => false,
-                    'module'  => false,
                 ]
             ],
             'All Class D' => [
                 new TestRequest('classd', null, null),
                 [
                     'can_run' => true,
-                    'name'    => static::path('/tests/unit/subsystemB/ClassDTest.php'),
-                    'suite'   => 'unit',
+                    'name'    => [static::path('/tests/unit/subsystemB/ClassDTest.php')],
+                    'suite'   => ['unit'],
                     'module'  => null,
                 ]
             ],
@@ -105,9 +100,6 @@ class TestLookupTest extends Unit {
                 new TestRequest('classa', null, null),
                 [
                     'can_run' => false,
-                    'name'    => false,
-                    'suite'   => false,
-                    'module'  => false,
                 ]
             ],
             'All tests' => [
@@ -123,9 +115,6 @@ class TestLookupTest extends Unit {
                 new TestRequest('classeee', null, null),
                 [
                     'can_run' => false,
-                    'name'    => false,
-                    'suite'   => false,
-                    'module'  => false,
                 ]
             ],
             'All in integration' => [
@@ -133,7 +122,7 @@ class TestLookupTest extends Unit {
                 [
                     'can_run' => true,
                     'name'    => null,
-                    'suite'   => 'integration',
+                    'suite'   => ['integration'],
                     'module'  => null,
                 ]
             ],

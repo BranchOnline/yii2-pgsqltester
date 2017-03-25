@@ -39,79 +39,57 @@ class TestBatch {
      * @return bool Whether this batch can run.
      */
     public function canRun(): bool {
-        if ($this->isEmpty()) {
-            return false;
-        }
-        if ($this->_request->requestsName() && ($this->hasMultipleFiles())) {
-            return false;
-        }
-        if ($this->_request->requestsName() && ($this->hasMultipleRequiredSuites() || $this->hasMultipleRequiredModules())) {
-            return false;
-        }
-        if ($this->_request->requestsSuite() && ($this->hasMultipleRequiredModules())) {
-            return false;
-        }
-        return true;
+        return !$this->isEmpty() && !$this->hasMultipleFilesToRun() && !$this->hasConflictingModules();
     }
 
-    /** @return string|null|false The name of the test to be run or null if multiple test have to be run. False if the batch cannot be run. */
-    public function getNameToRun() {
-        if (!$this->canRun()) {
-            return false;
-        }
-
-        if (!$this->_request->requestsName() || !isset($this->_files[0])) {
+    /** @return array|null The paths of the test to be run, or null if no files require to be specified. */
+    public function getFilesToRun() {
+        if (!$this->_request->requestsName()) {
             return null;
-        } else {
-            return $this->_files[0]->getRelativePath();
         }
+        $paths = [];
+        foreach ($this->_files as $file) {
+            $paths[] = $file->getRelativePath();
+        }
+        return $paths;
     }
 
     /** @return string|null The name of the suite to be run or null if multiple suites have to be run. */
-    public function getSuiteToRun() {
-        if (!$this->canRun()) {
-            return false;
-        }
-
-        if ($this->hasMultipleRequiredSuites()) {
+    public function getSuitesToRun() {
+        if (!$this->_request->requestsName() && !$this->_request->requestsSuite()) {
             return null;
-        } else {
-            return $this->_required_suites[0] ?? null;
         }
+        return $this->_required_suites;
     }
 
     /** @return string|null The name of the module to be run or null if multiple modules have to be run. */
-    public function getModuleToRun() {
-        if (!$this->canRun()) {
-            return false;
-        }
-
-        if ($this->hasMultipleRequiredModules()) {
+    public function getModulesToRun() {
+        if (!$this->_request->requestsName() && !$this->_request->requestsSuite() && !$this->_request->requestsModule()) {
             return null;
-        } else {
-            $module = $this->_required_modules[0] ?? '';
-            return $module === '' ? null : $module;
         }
-    }
-
-    /** @return bool Whether this batch has multiple required files. */
-    public function hasMultipleFiles() {
-        return sizeof($this->_files) > 1;
-    }
-
-    /** @return bool Whether this batch has multiple required modules. */
-    public function hasMultipleRequiredModules() {
-        return sizeof($this->_required_modules) > 1;
-    }
-
-    /** @return bool Whether this batch has multiple required suites. */
-    public function hasMultipleRequiredSuites() {
-        return sizeof($this->_required_suites) > 1;
+        $modules = [];
+        foreach ($this->_required_modules as $module) {
+            if (strlen($module) > 0) {
+                $modules[] = $module;
+            }
+        }
+        return $modules === [] ? null : $modules;
     }
 
     /** @return bool Whether this batch is empty. */
     public function isEmpty(): bool {
         return [] === $this->_files;
+    }
+
+    /** @return bool Whether this batch has multiple files to run. */
+    public function hasMultipleFilesToRun(): bool {
+        $files_to_run = $this->getFilesToRun();
+        return is_array($files_to_run) && sizeof($this->getFilesToRun()) > 1;
+    }
+
+    /** @return bool Whether this batch has conflicting modules. */
+    public function hasConflictingModules(): bool {
+        return $this->_request->requestsSuite() && sizeof($this->_required_modules) > 1;
     }
 
     /** Determine the set of all suits and all modules for this batch. Grouped so it allows a single for-loop. */
