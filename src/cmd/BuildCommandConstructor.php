@@ -7,7 +7,7 @@ namespace branchonline\pgsqltester\cmd;
  *
  * @author Roelof Ruis <roelof@branchonline.nl>
  */
-class BuildCommand implements CodeceptCommand {
+class BuildCommandConstructor implements CodeceptCommandConstructor {
 
     /** @var string Holds the constructed command. */
     private $_command;
@@ -27,7 +27,7 @@ class BuildCommand implements CodeceptCommand {
     }
 
     /** @inheritdoc */
-    public function getCommandString(): string {
+    public function getCommand(): string {
         return $this->_command;
     }
 }

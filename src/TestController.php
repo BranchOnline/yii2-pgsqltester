@@ -2,8 +2,8 @@
 
 namespace branchonline\pgsqltester;
 
-use branchonline\pgsqltester\cmd\BuildCommand;
-use branchonline\pgsqltester\cmd\RunCommand;
+use branchonline\pgsqltester\cmd\BuildCommandConstructor;
+use branchonline\pgsqltester\cmd\RunCommandConstructor;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
 use yii\base\InvalidCallException;
@@ -91,7 +91,7 @@ class TestController extends Controller {
      */
     public function actionBuild() {
         print_r("Building required classes\n");
-        $command_string = (new BuildCommand($this->silent))->getCommandString();
+        $command_string = (new BuildCommandConstructor($this->silent))->getCommand();
         passthru($command_string);
     }
 
@@ -201,7 +201,7 @@ class TestController extends Controller {
         if ($error) {
             return false;
         } else {
-            $command = new RunCommand(
+            $constructor = new RunCommandConstructor(
                 $this->for_module,
                 $this->suite,
                 $test_path,
@@ -209,7 +209,7 @@ class TestController extends Controller {
                 $this->coverage,
                 $this->silent
             );
-            return $command->getCommandString();
+            return $constructor->getCommand();
         }
     }
 

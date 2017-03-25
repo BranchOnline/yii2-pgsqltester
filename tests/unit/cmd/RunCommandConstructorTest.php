@@ -1,35 +1,35 @@
 <?php
 
 namespace tests\unit\cmd;
-use branchonline\pgsqltester\cmd\RunCommand;
+use branchonline\pgsqltester\cmd\RunCommandConstructor;
 use Codeception\Test\Unit;
 
 /**
  * @author Roelof Ruis <roelof@branchonline.nl>
  */
-class RunCommandTest extends Unit {
+class RunCommandConstructorTest extends Unit {
 
     /** @dataProvider runCommandsProvider */
-    public function testCommands($command_instance, $expected) {
-        $this->assertEquals($expected, $command_instance->getCommandString());
+    public function testCommands($command_constructor, $expected) {
+        $this->assertEquals($expected, $command_constructor->getCommand());
     }
 
     public function runCommandsProvider() {
         return [
             [
-                new RunCommand(),
+                new RunCommandConstructor(),
                 'composer exec codecept run -v',
             ],
             [
-                new RunCommand(null, 'unit'),
+                new RunCommandConstructor(null, 'unit'),
                 'composer exec codecept run -v unit',
             ],
             [
-                new RunCommand('', 'unit'),
+                new RunCommandConstructor('', 'unit'),
                 'composer exec codecept run -v unit',
             ],
             [
-                new RunCommand('cms', 'unit', 'components/Test.php', 'testFunctie', true, true),
+                new RunCommandConstructor('cms', 'unit', 'components/Test.php', 'testFunctie', true, true),
                 'composer exec codecept run unit --coverage-html -- -c cms components/Test.php::testFunctie',
             ]
         ];
