@@ -13,7 +13,6 @@ class TestFileTest extends Unit {
         $this->assertSame($suite, $test_file->getSuite());
         $this->assertSame($module, $test_file->getModule());
         $this->assertSame($index, $test_file->getIndex());
-        $this->assertSame($runnable, $test_file->isRunnable());
     }
 
     public function gettersProvider() {

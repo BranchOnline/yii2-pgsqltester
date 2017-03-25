@@ -76,11 +76,6 @@ class TestFile {
         return strtolower(preg_replace('/Test.php$/', '', $full_name));
     }
 
-    /** @return bool Whether this test file is runnable. */
-    public function isRunnable(): bool {
-        return $this->_suite !== null;
-    }
-
     /** @return string The index of this test file. */
     public function getIndex(): string {
         return $this->_index;
