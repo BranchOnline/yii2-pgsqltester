@@ -18,9 +18,9 @@ class TestLookupTest extends Unit {
     public function testLookup($name, $suite, $module, $expected) {
         $lookup = new TestLookup(codecept_data_dir() . '_fake_app_base_dir');
 
-        $results = $lookup->lookup($name, $suite, $module);
-        $this->assertSame(sizeof($expected), sizeof($results));
-        foreach ($results as $index => $result) {
+        $batch = $lookup->lookup($name, $suite, $module);
+        $this->assertSame(sizeof($expected), $batch->getSize());
+        foreach ($batch->getFiles() as $index => $result) {
             $this->assertSame($result->getRelativePath(), $expected[$index]);
         }
     }

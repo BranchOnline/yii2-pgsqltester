@@ -36,9 +36,9 @@ class TestLookup {
      * specific test is required.
      * @param string|null $test_suite  The suite name or null if no suite selected.
      * @param string|null $test_module The module name or null if no module selected.
-     * @return TestFile[] The found test files.
+     * @return TestBatch The test batch to be executed.
      */
-    public function lookup($test_name = null, $test_suite = null, $test_module = null): array {
+    public function lookup($test_name = null, $test_suite = null, $test_module = null): TestBatch {
         $search = new TestFileSearch();
 
         if (is_string($test_name)) {
@@ -53,7 +53,9 @@ class TestLookup {
             $search->inModule($test_module);
         }
 
-        return $search->findInIndex($this->_index);
+        $test_files = $search->findInIndex($this->_index);
+
+        return new TestBatch($test_files);
     }
 
 }
