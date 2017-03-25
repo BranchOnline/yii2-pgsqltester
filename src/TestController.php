@@ -55,7 +55,14 @@ class TestController extends Controller {
 
     /** @inheritdoc */
     public function options($actionID) {
-        return $actionID === 'run' ? ['suite', 'for_module', 'coverage', 'silent'] : [];
+        switch ($actionID) {
+            case 'run':
+                return ['suite', 'for_module', 'coverage', 'silent'];
+            case 'build':
+                return ['silent'];
+            default:
+                return [];
+        }
     }
 
     /** @inheritdoc */
