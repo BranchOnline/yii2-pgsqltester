@@ -76,7 +76,7 @@ class TestBatch {
         if ($this->hasMultipleRequiredSuites()) {
             return null;
         } else {
-            return $this->_requiredSuites()[0] ?? null;
+            return $this->_required_suites[0] ?? null;
         }
     }
 
@@ -89,7 +89,7 @@ class TestBatch {
         if ($this->hasMultipleRequiredModules()) {
             return null;
         } else {
-            $module = $this->_requiredModules()[0] ?? '';
+            $module = $this->_required_modules[0] ?? '';
             return $module === '' ? null : $module;
         }
     }
@@ -101,22 +101,12 @@ class TestBatch {
 
     /** @return bool Whether this batch has multiple required modules. */
     public function hasMultipleRequiredModules() {
-        return sizeof($this->_requiredModules()) > 1;
+        return sizeof($this->_required_modules) > 1;
     }
 
     /** @return bool Whether this batch has multiple required suites. */
     public function hasMultipleRequiredSuites() {
-        return sizeof($this->_requiredSuites()) > 1;
-    }
-
-    /** @return string[] The required suite names */
-    private function _requiredSuites() {
-        return array_keys($this->_required_suites);
-    }
-
-    /** @return string[] The required module names */
-    private function _requiredModules() {
-        return array_keys($this->_required_modules);
+        return sizeof($this->_required_suites) > 1;
     }
 
     /** @return bool Whether this batch is empty. */
@@ -138,7 +128,7 @@ class TestBatch {
                 $modules[$module] = true;
             }
         }
-        $this->_required_suites  = $suites;
-        $this->_required_modules = $modules;
+        $this->_required_suites  = array_keys($suites);
+        $this->_required_modules = array_keys($modules);
     }
 }
