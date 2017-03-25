@@ -3,6 +3,7 @@
 namespace branchonline\pgsqltester\filesystem;
 
 use Codeception\Test\Unit;
+use InvalidArgumentException;
 
 /**
  * Description of TestRequestTest
@@ -23,6 +24,21 @@ class TestRequestTest extends Unit {
 
         $this->assertSame($module, $request->getModule());
         $this->assertSame($module !== null, $request->requestsModule());
+    }
+
+    public function testNegativeMaxStringDistance() {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Max string distance should be a non-negative integer.');
+
+        $request = new TestRequest();
+        $request->setMaxStringDistance(-1);
+    }
+
+    public function testMaxStringDistance() {
+        $request = new TestRequest();
+        $this->assertSame(0, $request->getMaxStringDistance());
+        $request->setMaxStringDistance(1);
+        $this->assertSame(1, $request->getMaxStringDistance());
     }
 
     public function gettersProvider() {

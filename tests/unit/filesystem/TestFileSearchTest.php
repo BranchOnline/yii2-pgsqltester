@@ -10,10 +10,12 @@ use Codeception\Test\Unit;
 class TestFileSearchTest extends Unit {
 
     /** @dataProvider findInIndexProvider() */
-    public function testFindInIndex($request, $expected) {
+    public function testFindInIndex(TestRequest $request, $expected) {
         $index = $this->_getFakeAppBaseDirTestIndex();
 
-        $matches = TestFileSearch::findInIndex($index, $request, 1);
+        $request->setMaxStringDistance(1);
+
+        $matches = TestFileSearch::findInIndex($index, $request);
         $this->assertSame(sizeof($expected), sizeof($matches));
         foreach ($matches as $index => $result) {
             $this->assertSame($result->getRelativePath(), $expected[$index]);

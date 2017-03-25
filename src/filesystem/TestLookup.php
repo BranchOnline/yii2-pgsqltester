@@ -36,7 +36,7 @@ class TestLookup {
      * @return TestBatch The test batch to be executed.
      */
     public function lookup(TestRequest $request): TestBatch {
-        $test_files = TestFileSearch::findInIndex($this->_index, $request, 1);
+        $test_files = TestFileSearch::findInIndex($this->_index, $request);
         return new TestBatch($test_files, $request);
     }
 

@@ -12,14 +12,17 @@ class TestFileSearch {
     /**
      * Find a selection of files based on a given request.
      *
+     * Broadens the maximum string distance and returns the first set containing any files or an empty set if the
+     * given maximum is reached.
+     *
      * @param TestFileIndex $index               The index to search through.
      * @param TestRequest   $request             Specifying the request data.
-     * @param int           $max_string_distance Controlls the maximum levenshtein distance for fuzzy matching.
      * @return TestFile[] Array with matching files.
      */
-    public static function findInIndex(TestFileIndex $index, TestRequest $request, $max_string_distance = 0): array {
-        $matches         = [];
-        $string_distance = 0;
+    public static function findInIndex(TestFileIndex $index, TestRequest $request): array {
+        $matches             = [];
+        $string_distance     = 0;
+        $max_string_distance = $request->getMaxStringDistance();
         while ($string_distance <= $max_string_distance) {
             foreach ($index->getFiles() as $file) {
                 if ($request->requestsName() && !static::_stringsMatch($file->getIndex(), $request->getName(), $string_distance)) {

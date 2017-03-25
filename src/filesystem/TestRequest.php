@@ -2,6 +2,8 @@
 
 namespace branchonline\pgsqltester\filesystem;
 
+use InvalidArgumentException;
+
 /**
  * Models the request for a particular test or group of tests.
  *
@@ -18,6 +20,9 @@ class TestRequest {
     /** @var string|null the requested module. Null if request by module is not required. */
     private $_module;
 
+    /** @var int The maximum levenshtein distance allowed to allow fuzzy matching. */
+    private $_max_string_distance = 0;
+
     /**
      * Construct a new test request.
      *
@@ -29,6 +34,19 @@ class TestRequest {
         $this->_name = $name;
         $this->_suite = $suite;
         $this->_module = $module;
+    }
+
+    /** @param int $max_string_distance Specify the string matching distance for this request. */
+    public function setMaxStringDistance(int $max_string_distance) {
+        if ($max_string_distance < 0) {
+            throw new InvalidArgumentException('Max string distance should be a non-negative integer.');
+        }
+        $this->_max_string_distance = $max_string_distance;
+    }
+
+    /** @param string|null $name Specify the test name. */
+    public function setName($name = null) {
+        $this->_name = $name;
     }
 
     /** @return bool Whether this is a request for a particular name. */
@@ -59,6 +77,11 @@ class TestRequest {
     /** @return string|null The requested module. */
     public function getModule() {
         return $this->_module;
+    }
+
+    /** @return int The maximum string matching distance allowed. */
+    public function getMaxStringDistance(): int {
+        return $this->_max_string_distance;
     }
 
 }
