@@ -55,7 +55,7 @@ class TestLookup {
 
         $test_files = $search->findInIndex($this->_index);
 
-        return new TestBatch($test_files);
+        return new TestBatch($test_files, null !== $test_name, null !== $test_suite);
     }
 
 }

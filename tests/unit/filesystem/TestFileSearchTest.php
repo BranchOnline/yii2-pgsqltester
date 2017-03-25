@@ -40,7 +40,12 @@ class TestFileSearchTest extends Unit {
         $matches = (new TestFileSearch())
             ->inModule('moduleA')
             ->findInIndex($index);
-        $this->assertSame(static::path('/moduleA/tests/unit/subsystemA/ClassATest.php'), $matches[0]->getRelativePath());
+
+        $this->assertSame(4, sizeof($matches));
+        $this->assertSame(static::path('/moduleA/tests/style/ClassETest.php'), $matches[0]->getRelativePath());
+        $this->assertSame(static::path('/moduleA/tests/unit/subsystemA/ClassATest.php'), $matches[1]->getRelativePath());
+        $this->assertSame(static::path('/moduleA/tests/unit/subsystemA/ClassBTest.php'), $matches[2]->getRelativePath());
+        $this->assertSame(static::path('/moduleA/tests/unit/subsystemA/ClassCTest.php'), $matches[3]->getRelativePath());
     }
 
     public function testFindFuzzyInIndex() {

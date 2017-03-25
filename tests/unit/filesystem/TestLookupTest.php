@@ -14,9 +14,136 @@ class TestLookupTest extends Unit {
         new TestLookup('/unknown/basepath');
     }
 
+    /** @dataProvider canRunProvider */
+    public function testBatchIsCorrect($name, $suite, $module, $expected) {
+        $lookup = $this->constructLookup();
+
+        $batch = $lookup->lookup($name, $suite, $module);
+
+        $this->assertSame($expected['can_run'], $batch->canRun());
+        $this->assertSame($expected['name'], $batch->getNameToRun());
+        $this->assertSame($expected['suite'], $batch->getSuiteToRun());
+        $this->assertSame($expected['module'], $batch->getModuleToRun());
+    }
+
+    public function canRunProvider() {
+        return [
+            'All in suite unit' => [
+                null,
+                'unit',
+                null,
+                [
+                    'can_run' => false,
+                    'name'    => false,
+                    'suite'   => false,
+                    'module'  => false,
+                ]
+            ],
+            'All in suite style' => [
+                null,
+                'style',
+                null,
+                [
+                    'can_run' => true,
+                    'name'    => null,
+                    'suite'   => 'style',
+                    'module'  => 'moduleA',
+                ]
+            ],
+            'All in module A in suite style' => [
+                null,
+                'unit',
+                'moduleA',
+                [
+                    'can_run' => true,
+                    'name'    => null,
+                    'suite'   => 'unit',
+                    'module'  => 'moduleA',
+                ]
+            ],
+            'All in module A' => [
+                null,
+                null,
+                'moduleA',
+                [
+                    'can_run' => true,
+                    'name'    => null,
+                    'suite'   => null,
+                    'module'  => 'moduleA',
+                ]
+            ],
+            'All Class A in suite unit in module A' => [
+                'classa',
+                'unit',
+                'moduleA',
+                [
+                    'can_run' => true,
+                    'name'    => static::path('/moduleA/tests/unit/subsystemA/ClassATest.php'),
+                    'suite'   => 'unit',
+                    'module'  => 'moduleA',
+                ]
+            ],
+            'All Class A in suite unit' => [
+                'classa',
+                'unit',
+                null,
+                [
+                    'can_run' => false,
+                    'name'    => false,
+                    'suite'   => false,
+                    'module'  => false,
+                ]
+            ],
+            'All Class A' => [
+                'classa',
+                null,
+                null,
+                [
+                    'can_run' => false,
+                    'name'    => false,
+                    'suite'   => false,
+                    'module'  => false,
+                ]
+            ],
+            'All tests' => [
+                null,
+                null,
+                null,
+                [
+                    'can_run' => true,
+                    'name'    => null,
+                    'suite'   => null,
+                    'module'  => null,
+                ]
+            ],
+            'All class EEE' => [
+                'classeee',
+                null,
+                null,
+                [
+                    'can_run' => false,
+                    'name'    => false,
+                    'suite'   => false,
+                    'module'  => false,
+                ]
+            ],
+            'All in integration' => [
+                null,
+                'integration',
+                null,
+                [
+                    'can_run' => true,
+                    'name'    => null,
+                    'suite'   => 'integration',
+                    'module'  => null,
+                ]
+            ],
+        ];
+    }
+
     /** @dataProvider lookupProvider */
     public function testLookup($name, $suite, $module, $expected) {
-        $lookup = new TestLookup(codecept_data_dir() . '_fake_app_base_dir');
+        $lookup = $this->constructLookup();
 
         $batch = $lookup->lookup($name, $suite, $module);
         $this->assertSame(sizeof($expected), $batch->getSize());
@@ -32,6 +159,7 @@ class TestLookupTest extends Unit {
                 null,
                 null,
                 [
+                    static::path('/moduleA/tests/style/ClassETest.php'),
                     static::path('/moduleA/tests/unit/subsystemA/ClassATest.php'),
                     static::path('/moduleA/tests/unit/subsystemA/ClassBTest.php'),
                     static::path('/moduleA/tests/unit/subsystemA/ClassCTest.php'),
@@ -93,11 +221,20 @@ class TestLookupTest extends Unit {
                     static::path('/moduleA/tests/unit/subsystemA/ClassATest.php'),
                 ]
             ],
+            'All in module A in suite style' => [
+                null,
+                'style',
+                'moduleA',
+                [
+                    static::path('/moduleA/tests/style/ClassETest.php'),
+                ]
+            ],
             'All in module A' => [
                 null,
                 null,
                 'moduleA',
                 [
+                    static::path('/moduleA/tests/style/ClassETest.php'),
                     static::path('/moduleA/tests/unit/subsystemA/ClassATest.php'),
                     static::path('/moduleA/tests/unit/subsystemA/ClassBTest.php'),
                     static::path('/moduleA/tests/unit/subsystemA/ClassCTest.php'),
@@ -142,6 +279,10 @@ class TestLookupTest extends Unit {
         } else {
             return $path;
         }
+    }
+
+    protected function constructLookup() {
+        return new TestLookup(codecept_data_dir() . '_fake_app_base_dir');
     }
 
 }

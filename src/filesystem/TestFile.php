@@ -86,7 +86,7 @@ class TestFile {
         return $this->_index;
     }
 
-    /** @return string The suite of this test file. */
+    /** @return null|string The suite of this test file. */
     public function getSuite() {
         return $this->_suite;
     }
