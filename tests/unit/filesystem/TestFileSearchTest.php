@@ -29,6 +29,7 @@ class TestFileSearchTest extends Unit {
                     static::path('/moduleA/tests/unit/subsystemA/ClassATest.php'),
                     static::path('/moduleA/tests/unit/subsystemA/ClassBTest.php'),
                     static::path('/moduleA/tests/unit/subsystemA/ClassCTest.php'),
+                    static::path('/moduleA/tests/unit/subsystemB/ClassBTest.php'),
                     static::path('/tests/integration/ClassATest.php'),
                     static::path('/tests/unit/subsystemA/ClassATest.php'),
                     static::path('/tests/unit/subsystemA/ClassBTest.php'),
@@ -62,6 +63,7 @@ class TestFileSearchTest extends Unit {
                     static::path('/moduleA/tests/unit/subsystemA/ClassATest.php'),
                     static::path('/moduleA/tests/unit/subsystemA/ClassBTest.php'),
                     static::path('/moduleA/tests/unit/subsystemA/ClassCTest.php'),
+                    static::path('/moduleA/tests/unit/subsystemB/ClassBTest.php'),
                     static::path('/tests/unit/subsystemA/ClassATest.php'),
                     static::path('/tests/unit/subsystemA/ClassBTest.php'),
                     static::path('/tests/unit/subsystemB/ClassCTest.php'),
@@ -81,6 +83,7 @@ class TestFileSearchTest extends Unit {
                     static::path('/moduleA/tests/unit/subsystemA/ClassATest.php'),
                     static::path('/moduleA/tests/unit/subsystemA/ClassBTest.php'),
                     static::path('/moduleA/tests/unit/subsystemA/ClassCTest.php'),
+                    static::path('/moduleA/tests/unit/subsystemB/ClassBTest.php'),
                 ]
             ],
             'All in module B' => [

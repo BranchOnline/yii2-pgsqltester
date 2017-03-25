@@ -29,6 +29,15 @@ class TestLookupTest extends Unit {
 
     public function canRunProvider() {
         return [
+            'All Class B in module A' => [
+                new TestRequest('classb', null, 'moduleA'),
+                [
+                    'can_run' => false,
+                    'name'    => false,
+                    'suite'   => false,
+                    'module'  => false,
+                ]
+            ],
             'All in suite unit' => [
                 new TestRequest(null, 'unit', null),
                 [
@@ -81,6 +90,15 @@ class TestLookupTest extends Unit {
                     'name'    => false,
                     'suite'   => false,
                     'module'  => false,
+                ]
+            ],
+            'All Class D' => [
+                new TestRequest('classd', null, null),
+                [
+                    'can_run' => true,
+                    'name'    => static::path('/tests/unit/subsystemB/ClassDTest.php'),
+                    'suite'   => 'unit',
+                    'module'  => null,
                 ]
             ],
             'All Class A' => [

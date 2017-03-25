@@ -42,6 +42,9 @@ class TestBatch {
         if ($this->isEmpty()) {
             return false;
         }
+        if ($this->_request->requestsName() && ($this->hasMultipleFiles())) {
+            return false;
+        }
         if ($this->_request->requestsName() && ($this->hasMultipleRequiredSuites() || $this->hasMultipleRequiredModules())) {
             return false;
         }
@@ -89,6 +92,11 @@ class TestBatch {
             $module = $this->_requiredModules()[0] ?? '';
             return $module === '' ? null : $module;
         }
+    }
+
+    /** @return bool Whether this batch has multiple required files. */
+    public function hasMultipleFiles() {
+        return sizeof($this->_files) > 1;
     }
 
     /** @return bool Whether this batch has multiple required modules. */
