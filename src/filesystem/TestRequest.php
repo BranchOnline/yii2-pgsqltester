@@ -28,7 +28,7 @@ class TestRequest {
      *
      * @param string|null $name   Optionally specify the test name.
      * @param string|null $suite  Optionally specify the test suite.
-     * @param string|null $module Optionally specify the test suite.
+     * @param string|null $module Optionally specify the test module.
      */
     public function __construct($name = null, $suite = null, $module = null) {
         $this->_name = $name;
