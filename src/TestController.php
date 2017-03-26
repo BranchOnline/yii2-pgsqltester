@@ -4,8 +4,10 @@ namespace branchonline\pgsqltester;
 
 use branchonline\pgsqltester\cmd\BuildCommandConstructor;
 use branchonline\pgsqltester\cmd\RunCommandConstructor;
-use RecursiveDirectoryIterator;
-use RecursiveIteratorIterator;
+use branchonline\pgsqltester\filesystem\TestBatch;
+use branchonline\pgsqltester\filesystem\TestFileIndex;
+use branchonline\pgsqltester\filesystem\TestLookup;
+use branchonline\pgsqltester\filesystem\TestRequest;
 use yii\base\InvalidCallException;
 use yii\base\InvalidConfigException;
 use yii\base\InvalidParamException;
@@ -25,6 +27,7 @@ use yii\helpers\Console;
  * Warning: This class is designed to function with PostgreSQL only.
  *
  * @author Roelof Ruis <roelof@branchonline.nl>
+ * @version v2.0
  */
 class TestController extends Controller {
 
@@ -113,20 +116,178 @@ class TestController extends Controller {
      * @return void
      */
     public function actionRun($test_class = '', $test_function = '') {
-        if ($this->suite === static::ALL_SUITES) {
-            $this->suite = '';
-        } elseif ($this->for_module !== '' && $this->suite === '') {
-            $this->suite = 'unit';
-        }
         if ($this->actionPrepareDb()) {
-            $command = $this->prepareCodeceptCommand($test_class, $test_function);
-            if (is_string($command)) {
+            $lookup      = $this->_createTestLookup();
+            $request     = $this->_createTestRequest($test_class, $this->suite, $this->for_module);
+            $constructor = $this->runInteractiveTestRequest($lookup, $request);
+            if ($constructor instanceof RunCommandConstructor) {
+                $constructor->setFunction($test_function);
+                $command = $constructor->getCommand();
                 print_r('About to run \'' . $command . "'\n\n'");
                 passthru($command);
             } else {
                 exit();
             }
         }
+    }
+
+    /**
+     * Build a new test request.
+     *
+     * @param string|null $test_class  The test class name to be found.
+     * @param string|null $test_suite  The test suite.
+     * @param string|null $test_module The test module.
+     * @return TestRequest the new test request instance.
+     */
+    private function _createTestRequest($test_class = null, $test_suite = null, $test_module = null): TestRequest {
+        $request = new TestRequest(
+            empty($test_class) ? null : $test_class,
+            empty($test_suite) ? null : $test_suite,
+            empty($test_module) ? null : $test_module
+        );
+        $request->setMaxStringDistance(1);
+        return $request;
+    }
+
+    /**
+     * Builds a new lookup instance, excluding vendor directories.
+     *
+     * @return TestLookup New test lookup instance.
+     */
+    private function _createTestLookup() {
+        $lookup = new TestLookup(Yii::getAlias('@app'));
+        $lookup->excludeDirectories([TestFileIndex::MATCH_ANY_SUBDIR . 'vendor']);
+        return $lookup;
+    }
+
+    /**
+     * Run a test request allowing for interactive selection of the required tests.
+     *
+     * @param TestLookup  $lookup  The test lookup instance on which to run the request.
+     * @param TestRequest $request The test request instance containing the requested test information.
+     * @return RunCommandConstructor|false The command constructor or false on an error.
+     */
+    private function runInteractiveTestRequest(TestLookup $lookup, TestRequest $request) {
+        $test_batch = $lookup->lookup($request);
+        $error      = false;
+        while (!$test_batch->canRun()) {
+            if ($test_batch->isEmpty()) {
+                $error = $this->_interactiveBroadenScope($request);
+            } elseif ($test_batch->hasMultipleFilesToRun()) {
+                $error = $this->_interactiveFileSelect($test_batch, $request);
+            } elseif ($test_batch->hasConflictingModules()) {
+                $error = $this->_interactiveModuleSelect($test_batch, $request);
+            }
+            if ($error) {
+                break;
+            }
+            $test_batch = $lookup->lookup($request);
+        }
+        $module   = $test_batch->getModulesToRun()[0] ?? null;
+        $suite    = $test_batch->getSuitesToRun()[0] ?? null;
+        $path     = $test_batch->getFilesToRun()[0] ?? null;
+        if ($error) {
+            return false;
+        } else {
+            $constructor = new RunCommandConstructor($module, $suite, $path, null, $this->coverage, $this->silent);
+            return $constructor;
+        }
+    }
+
+    /**
+     * Interactively selects a module.
+     *
+     * @param TestBatch   $current_batch The current batch holding the file options.
+     * @param TestRequest $request       The request object that might be modified for the next round.
+     * @return bool Whether an problem/error occurred during execution of this function.
+     */
+    private function _interactiveModuleSelect(TestBatch $current_batch, TestRequest &$request) {
+        $suite = $current_batch->getSuitesToRun()[0] ?? '<unknown suite>';
+        print_r("Suite $suite found in multiple modules.\n"
+            . "Next time also specify the module.\nWhich module would you like to run now?\n");
+
+        $pick_from   = $current_batch->getModulesToRun();
+        $num_to_pick = sizeof($pick_from);
+
+        foreach ($pick_from as $index => $module) {
+            print_r("$index: $module\n");
+        }
+
+        $selected = Console::prompt('>', [
+            'pattern' => '/^[0-9]+$/',
+            'validator' => function($input, $error) use ($num_to_pick) {
+                return (int) $input < $num_to_pick;
+            }
+        ]);
+
+        if ($selected === $num_to_pick) {
+            $request->setModule(null);
+        } else {
+            $request->setModule($pick_from[$selected]);
+        }
+        return false;
+    }
+
+    /**
+     * Interactively broadens the scope of the tests.
+     *
+     * @param TestRequest $request       The request object that might be modified for the next round.
+     * @return bool Whether an problem/error occurred during execution of this function.
+     */
+    private function _interactiveBroadenScope(TestRequest &$request) {
+        print_r("No matching tests were found.\nNow what?\n");
+
+        print_r("<enter>: Let me figure it out myself\n0: remove suite\n1: remove suite and module\n2: remove class name\n");
+
+        $selected = Console::prompt('>', [
+            'pattern' => '/^[0-9]?$/',
+            'validator' => function($input, $error) {
+                return $input === '' || (int) $input < 3;
+            }
+        ]);
+
+        if ($selected === '') {
+            print_r("Exiting...\n");
+            return true;
+        } elseif ($selected == 0) {
+            $request->setSuite(null);
+        } elseif ($selected == 1) {
+            $request->setSuite(null);
+            $request->setModule(null);
+        } elseif ($selected == 2) {
+            $request->setName(null);
+        }
+
+        return false;
+    }
+
+    /**
+     * Interactively select a file from multiple options.
+     *
+     * @param TestBatch   $current_batch The current batch holding the file options.
+     * @param TestRequest $request       The request object that might be modified for the next round.
+     * @return bool Whether an problem/error occurred during execution of this function.
+     */
+    private function _interactiveFileSelect(TestBatch $current_batch, TestRequest &$request): bool {
+        print_r("\nMultiple tests found for class '" . $request->getName() . "'.\n"
+            . "Next time specify more of the path.\nWhich test file would you like to run now?\n");
+
+        $pick_from   = $current_batch->getFilesToRun();
+        $num_to_pick = sizeof($pick_from);
+
+        foreach ($pick_from as $index => $class_path) {
+            print_r("$index: $class_path\n");
+        }
+
+        $selected = Console::prompt('>', [
+            'pattern' => '/^[0-9]+$/',
+            'validator' => function($input, $error) use ($num_to_pick) {
+                return (int) $input < $num_to_pick;
+            }
+        ]);
+
+        $request->setName($pick_from[$selected]);
+        return false;
     }
 
     /**
@@ -158,164 +319,6 @@ class TestController extends Controller {
             }
             return false;
         }
-    }
-
-    /**
-     * Prepare a codeception argument string to run specific tests only.
-     *
-     * @todo: Use TestLookup class and refactor accordingly.
-     *
-     * @param string $module            The system module to run the tests for.
-     * @param string $test_class        The name of the test class that you want to run.
-     * @param string $raw_test_function The name of the test function that you want to run.
-     * @return string|false The argument string to be passed to the codecept executor or false if an error occurred.
-     */
-    protected function prepareCodeceptCommand(string $test_class, string $raw_test_function) {
-        $error         = false;
-        $test_function = '';
-        $test_path     = '';
-        if ('' !== $test_class) {
-            $class_paths = $this->lookupTestClass($test_class);
-            if (is_array($class_paths)) {
-                $classes_to_pick = sizeof($class_paths);
-                if ($classes_to_pick === 1) {
-                    $test_path = $class_paths[0];
-                } else {
-                    print_r("\nMultiple tests found for given test class '$test_class'.\n"
-                        . "Next time use the fully qualified class path.\nWhich one would you like to run now?\n");
-                    foreach ($class_paths as $index => $class_path) {
-                        print_r("$index: $class_path\n");
-                    }
-                    $selected = Console::prompt('>', [
-                        'pattern' => '/^[0-9]+$/',
-                        'validator' => function($input, $error) use ($classes_to_pick) {
-                            return (int) $input < $classes_to_pick;
-                        }
-                    ]);
-                    if ('' === $selected) {
-                        print_r("Nothing selected, exiting...\n");
-                        $error = true;
-                    } else {
-                        $test_path = $class_paths[$selected];
-                    }
-                }
-                if (''!== $test_path && '' !== $raw_test_function) {
-                    $test_function = (1 === preg_match('/^test/', $raw_test_function)) ? $raw_test_function : 'test' . ucfirst($raw_test_function);
-                }
-            } else {
-                print_r("No test found for given test class '$test_class'\nPerhaps a spelling error? Or maybe you forgot to mention the suite?\n");
-                $error = true;
-            }
-        }
-        if ($error) {
-            return false;
-        } else {
-            $constructor = new RunCommandConstructor(
-                $this->for_module,
-                $this->suite,
-                $test_path,
-                $test_function,
-                $this->coverage,
-                $this->silent
-            );
-            return $constructor->getCommand();
-        }
-    }
-
-    /**
-     * Lookup whether there is a test that is specified by the given class name.
-     *
-     * @todo: Remove this function.
-     * @deprecated Use new filesystem classes
-     *
-     * @param string $class_name The name of the class, accepts simpel names,
-     * with or without Test/extension or fully qualified paths.
-     * @return false|array False if no test can be found to match, or an array
-     * if there exist matching tests.
-     */
-    protected function lookupTestClass(string $class_name) {
-        if ($class_name === '') {
-            return false;
-        }
-        $class_name = preg_replace('/^\//', '', $class_name);
-        $parts      = explode(DIRECTORY_SEPARATOR, $class_name);
-        if (sizeof($parts) === 0) {
-            return false;
-        } if (sizeof($parts) > 1) {
-            return [$class_name];
-        }
-        $file_name = array_pop($parts);
-        $file_name = preg_replace('/test(.php)?$/', '', strtolower($file_name));
-        $index     =  $this->getTestIndexForModule();
-        return $this->lookupClassInIndex($file_name, $index);
-    }
-
-    /**
-     * Lookup a class in the given index. If a single test is found to match and no suite is set, automatically finds
-     * and sets the suite.
-     *
-     * @todo: Remove this function.
-     * @deprecated Use new filesystem classes
-     *
-     * @param string $class_name The class name to be found.
-     * @param array  $index      The file index to look through.
-     * @return false|array False if no test can be found to match, or an array if there exists matching tests.
-     */
-    protected function lookupClassInIndex(string $class_name, array $index) {
-        $options = [];
-        if ($this->suite === '') {
-            $required_suites = [];
-            foreach ($index as $suite_index => $class_indices) {
-                foreach ($class_indices as $class_index => $associated_files) {
-                    if ($class_name === $class_index) {
-                        $options[] = $index[$suite_index][$class_index][0];
-                        $required_suites[] = $suite_index;
-                    }
-                }
-            }
-            if (sizeof($required_suites) === 1) {
-                $this->suite = $required_suites[0];
-            }
-        } else {
-            $options = $index[$this->suite][$class_name];
-        }
-        return sizeof($options) === 0 ? false : $options;
-    }
-
-    /**
-     * Builds a test index used for looking up the tests on a given class.
-     *
-     * @todo: Remove this function.
-     * @deprecated Use new filesystem classes
-     *
-     * @return array The test index.
-     */
-    protected function getTestIndexForModule() {
-        $dirs          = ['tests'];
-        if ($this->for_module !== '') {
-            array_unshift($dirs, $this->for_module);
-        }
-        try {
-            $test_base_dir = Yii::getAlias('@' . implode(DIRECTORY_SEPARATOR, $dirs) . DIRECTORY_SEPARATOR);
-        } catch (InvalidParamException $ex) {
-            $test_base_dir = Yii::getAlias('@app/' . implode(DIRECTORY_SEPARATOR, $dirs) . DIRECTORY_SEPARATOR);
-        }
-        $test_index    = [];
-        $it            = new RecursiveDirectoryIterator($test_base_dir);
-        foreach (new RecursiveIteratorIterator($it) as $file) {
-            if (1 === preg_match('/Test.php$/', $file->getBaseName())) {
-                $test_name     = strtolower(preg_replace('/Test.php/', '', $file->getBaseName()));
-                $relative_path = str_replace($test_base_dir, '', $file->getPathName());
-                $paths_part    = explode(DIRECTORY_SEPARATOR, $relative_path);
-                $suite         = array_shift($paths_part);
-                if (!isset($test_index[$suite][$test_name])) {
-                    $test_index[$suite][$test_name] = [implode(DIRECTORY_SEPARATOR, $paths_part)];
-                } elseif (is_array($test_index[$suite][$test_name])) {
-                    $test_index[$suite][$test_name][] = implode(DIRECTORY_SEPARATOR, $paths_part);
-                }
-            }
-        }
-        return $test_index;
     }
 
     /**
