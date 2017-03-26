@@ -61,7 +61,7 @@ class CodeceptCommandBuilderTest extends Unit {
                     'onModule' => 'cms',
                     'outputHtmlCoverage' => []
                 ],
-                'composer exec codecept run -v unit --coverage-html -- -c cms'
+                'composer exec codecept run -v unit -- -c cms --coverage-html'
             ],
             [
                 'run',
@@ -78,7 +78,7 @@ class CodeceptCommandBuilderTest extends Unit {
                     'beSilent' => [],
                     'outputHtmlCoverage' => []
                 ],
-                'composer exec codecept run unit --coverage-html',
+                'composer exec codecept run unit -- --coverage-html',
             ],
             [
                 'run',
@@ -88,7 +88,7 @@ class CodeceptCommandBuilderTest extends Unit {
             [
                 'run',
                 ['outputHtmlcoverage' => []],
-                'composer exec codecept run -v --coverage-html',
+                'composer exec codecept run -v -- --coverage-html',
             ],
             [
                 'run',

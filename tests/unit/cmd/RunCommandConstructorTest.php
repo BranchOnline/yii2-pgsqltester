@@ -14,6 +14,12 @@ class RunCommandConstructorTest extends Unit {
         $this->assertEquals($expected, $command_constructor->getCommand());
     }
 
+    public function testSetFunction() {
+        $constructor = new RunCommandConstructor(null, null, 'components/Test.php');
+        $constructor->setFunction('testFunctie');
+        $this->assertEquals('composer exec codecept run -v -- components/Test.php::testFunctie', $constructor->getCommand());
+    }
+
     public function runCommandsProvider() {
         return [
             [
@@ -30,7 +36,7 @@ class RunCommandConstructorTest extends Unit {
             ],
             [
                 new RunCommandConstructor('cms', 'unit', 'components/Test.php', 'testFunctie', true, true),
-                'composer exec codecept run unit --coverage-html -- -c cms components/Test.php::testFunctie',
+                'composer exec codecept run unit -- -c cms components/Test.php::testFunctie --coverage-html',
             ]
         ];
     }

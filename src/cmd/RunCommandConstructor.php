@@ -9,8 +9,8 @@ namespace branchonline\pgsqltester\cmd;
  */
 class RunCommandConstructor implements CodeceptCommandConstructor {
 
-    /** @var string Holds the constructed command. */
-    private $_command;
+    /** @var CodeceptCommandBuilder Holds the constructed command. */
+    private $_builder;
 
     /**
      * Construct a new codecept build command.
@@ -23,31 +23,41 @@ class RunCommandConstructor implements CodeceptCommandConstructor {
      * @param bool         $silent   Whether to build silently.
      */
     public function __construct($module = null, $suite = null, $file = null, $function = null, $coverage = false, bool $silent = false) {
-        $builder = new CodeceptCommandBuilder();
-        $builder->executeAction('run');
+        $this->_builder = new CodeceptCommandBuilder();
+        $this->_builder->executeAction('run');
         if (is_string($module) && $module !== '') {
-            $builder->onModule($module);
+            $this->_builder->onModule($module);
         }
         if (is_string($suite) && $suite !== '') {
-            $builder->onSuite($suite);
+            $this->_builder->onSuite($suite);
         }
         if (is_string($file) && $file !== '') {
-            $builder->onFile($file);
+            $this->_builder->onFile($file);
         }
         if (is_string($function) && $function !== '') {
-            $builder->onFunction($function);
+            $this->_builder->onFunction($function);
         }
         if ($coverage) {
-            $builder->outputHtmlCoverage();
+            $this->_builder->outputHtmlCoverage();
         }
         if ($silent) {
-            $builder->beSilent();
+            $this->_builder->beSilent();
         }
-        $this->_command = $builder->getCommand();
+    }
+
+    /**
+     * Specify the test function to be executed.
+     *
+     * @param string $function The name of the test function to be executed.
+     *
+     * @return void
+     */
+    public function setFunction(string $function) {
+        $this->_builder->onFunction($function);
     }
 
     /** @inheritdoc */
     public function getCommand(): string {
-        return $this->_command;
+        return $this->_builder->getCommand();
     }
 }

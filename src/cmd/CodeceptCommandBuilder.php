@@ -96,6 +96,9 @@ class CodeceptCommandBuilder {
                 $command_parts[] = $this->_file;
             }
         }
+        if (false !== ($coverage_type = $this->_coverage)) {
+            $command_parts[] = "--coverage-$coverage_type";
+        }
         return $command_parts;
     }
 
@@ -107,9 +110,6 @@ class CodeceptCommandBuilder {
         }
         if (false !== $this->_suite) {
             $command_parts[] = $this->_suite;
-        }
-        if (false !== ($coverage_type = $this->_coverage)) {
-            $command_parts[] = "--coverage-$coverage_type";
         }
         return $command_parts;
     }

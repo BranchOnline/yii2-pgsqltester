@@ -54,7 +54,7 @@ class TestBatch {
         return $paths;
     }
 
-    /** @return string|null The name of the suite to be run or null if multiple suites have to be run. */
+    /** @return array|null The name of the suite to be run or null if multiple suites have to be run. */
     public function getSuitesToRun() {
         if (!$this->_request->requestsName() && !$this->_request->requestsSuite()) {
             return null;
@@ -62,7 +62,7 @@ class TestBatch {
         return $this->_required_suites;
     }
 
-    /** @return string|null The name of the module to be run or null if multiple modules have to be run. */
+    /** @return array|null The name of the module to be run or null if multiple modules have to be run. */
     public function getModulesToRun() {
         if (!$this->_request->requestsName() && !$this->_request->requestsSuite() && !$this->_request->requestsModule()) {
             return null;
