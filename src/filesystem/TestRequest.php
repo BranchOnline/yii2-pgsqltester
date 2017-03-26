@@ -44,6 +44,16 @@ class TestRequest {
         $this->_max_string_distance = $max_string_distance;
     }
 
+    /** @param string|null $suite Specify the suite. */
+    public function setSuite($suite = null) {
+        $this->_suite = $suite;
+    }
+
+    /** @param string|null $module Specify the module. */
+    public function setModule($module = null) {
+        $this->_module = $module;
+    }
+
     /** @param string|null $name Specify the test name. */
     public function setName($name = null) {
         $this->_name = $name;
