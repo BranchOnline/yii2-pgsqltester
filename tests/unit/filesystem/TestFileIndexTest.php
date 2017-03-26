@@ -17,6 +17,10 @@ class TestFileIndexTest extends Unit {
         new TestFileIndex('unknown/basedir');
     }
 
+    public function testMatchAnySubdirConstant() {
+        $this->assertSame('*' . DIRECTORY_SEPARATOR, TestFileIndex::MATCH_ANY_SUBDIR);
+    }
+
     public function testNumIndexedFiles() {
         $index = $this->_getFakeAppBaseDirTestIndex();
 
@@ -33,12 +37,25 @@ class TestFileIndexTest extends Unit {
             static::path('/tests/unit/subsystemB/ClassDTest.php'),
         ];
 
-        $actual_files = $index->getFiles();
-        $this->_assertIndexMatches($expected_files, $actual_files);
+        $this->_assertIndexMatches($expected_files, $index);
+    }
+
+    public function testExcludeAllWithSubsystemA() {
+        $index = $this->_getFakeAppBaseDirTestIndex();
+        $index->setExcludeDirs(['*/subsystemA']);
+
+        $expected_files = [
+            static::path('/moduleA/tests/style/ClassETest.php'),
+            static::path('/moduleA/tests/unit/subsystemB/ClassBTest.php'),
+            static::path('/tests/integration/ClassATest.php'),
+            static::path('/tests/unit/subsystemB/ClassCTest.php'),
+            static::path('/tests/unit/subsystemB/ClassDTest.php'),
+        ];
+        $this->_assertIndexMatches($expected_files, $index);
     }
 
     public function testExcludeModuleA() {
-        $index        = $this->_getFakeAppBaseDirTestIndex();
+        $index = $this->_getFakeAppBaseDirTestIndex();
         $index->setExcludeDirs(['/moduleA']);
 
         $expected_files = [
@@ -48,20 +65,19 @@ class TestFileIndexTest extends Unit {
             static::path('/tests/unit/subsystemB/ClassCTest.php'),
             static::path('/tests/unit/subsystemB/ClassDTest.php'),
         ];
-        $actual_files = $index->getFiles();
-        $this->_assertIndexMatches($expected_files, $actual_files);
+        $this->_assertIndexMatches($expected_files, $index);
     }
 
     public function testExcludeAll() {
-        $index        = $this->_getFakeAppBaseDirTestIndex();
+        $index = $this->_getFakeAppBaseDirTestIndex();
         $index->setExcludeDirs(['/moduleA', 'tests']);
 
         $expected_files = [];
-        $actual_files = $index->getFiles();
-        $this->_assertIndexMatches($expected_files, $actual_files);
+        $this->_assertIndexMatches($expected_files, $index);
     }
 
-    private function _assertIndexMatches($expected_files, $actual_files) {
+    private function _assertIndexMatches($expected_files, TestFileIndex $index) {
+        $actual_files = $index->getFiles();
         $this->assertSame(sizeof($expected_files), sizeof($actual_files));
         foreach ($actual_files as $idx => $file) {
             $this->assertInstanceOf(TestFile::class, $file);

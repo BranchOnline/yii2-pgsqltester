@@ -24,6 +24,9 @@ class TestFileIndex {
     /** @var array A list of directories to be excluded relative to the base directory. */
     private $_exclude_dirs = [];
 
+    /** @var string the wildcard specifying to match any subdirectory. */
+    const MATCH_ANY_SUBDIR = '*' . DIRECTORY_SEPARATOR;
+
     /**
      * Construct a new test file index relative to a given base directory.
      *
@@ -114,7 +117,12 @@ class TestFileIndex {
         }
         $file_path = ltrim(str_replace($this->_base_dir, '', $path), DIRECTORY_SEPARATOR);
         foreach ($this->_exclude_dirs as $exclude_dir) {
-            if (StringUtil::startsWith($file_path, $exclude_dir)) {
+            if (StringUtil::startsWith($exclude_dir, static::MATCH_ANY_SUBDIR)) {
+                $actual_dir = ltrim($exclude_dir, static::MATCH_ANY_SUBDIR);
+                if (StringUtil::contains($file_path, $actual_dir)) {
+                    return true;
+                }
+            } elseif (StringUtil::startsWith($file_path, $exclude_dir)) {
                 return true;
             }
         }
