@@ -9,7 +9,121 @@ use Codeception\Test\Unit;
  */
 class TestFileSearchTest extends Unit {
 
-    /** @dataProvider findInIndexProvider() */
+    /** @dataProvider queryMatchesFileProvider */
+    public function testQueryMatchesFile($name, $path, $max_string_distance, $expected_match) {
+        $actual_match = TestFileSearch::queryMatchesPath($name, $path, $max_string_distance);
+
+        $this->assertSame($expected_match, $actual_match);
+    }
+
+    public function queryMatchesFileProvider() {
+        return [
+            'empty string doesn\'t match' => [
+                '',
+                'moduleA/tests/unit/subsystemA/ClassATest.php',
+                0,
+                false
+            ],
+            'lowerclass class name does match' => [
+                'classa',
+                'moduleA/tests/unit/subsystemA/ClassATest.php',
+                0,
+                true
+            ],
+            'Correctly cased class name does match' => [
+                'ClassA',
+                'moduleA/tests/unit/subsystemA/ClassATest.php',
+                0,
+                true
+            ],
+            'Misspelled lower class name does match with correct distance' => [
+                'clasa',
+                'moduleA/tests/unit/subsystemA/ClassATest.php',
+                1,
+                true
+            ],
+            'Misspelled lower class name doesn\'t match with incorrect distance' => [
+                'clasa',
+                'moduleA/tests/unit/subsystemA/ClassATest.php',
+                0,
+                false
+            ],
+            'Full correctly cased class name does match' => [
+                'ClassATest',
+                'moduleA/tests/unit/subsystemA/ClassATest.php',
+                0,
+                true
+            ],
+            'Full correctly cased class name with extension does match' => [
+                'ClassATest.php',
+                'moduleA/tests/unit/subsystemA/ClassATest.php',
+                0,
+                true
+            ],
+            'Full lower cased misspelled class name with correct distance does match' => [
+                'clasatest.php',
+                'moduleA/tests/unit/subsystemA/ClassATest.php',
+                1,
+                true
+            ],
+            'Full correctly cased path does match' => [
+                'moduleA/tests/unit/subsystemA/ClassATest.php',
+                'moduleA/tests/unit/subsystemA/ClassATest.php',
+                0,
+                true
+            ],
+            'Full lower cased path does match' => [
+                'modulea/tests/unit/subsystema/classatest.php',
+                'moduleA/tests/unit/subsystemA/ClassATest.php',
+                0,
+                true
+            ],
+            'Full lower cased path without extension name does match' => [
+                'modulea/tests/unit/subsystema/classatest',
+                'moduleA/tests/unit/subsystemA/ClassATest.php',
+                0,
+                true
+            ],
+            'Full lower cased path without extension and test does match' => [
+                'modulea/tests/unit/subsystema/classa',
+                'moduleA/tests/unit/subsystemA/ClassATest.php',
+                0,
+                true
+            ],
+            'Partial lower cased path without extension name does match' => [
+                'subsystema/classa',
+                'moduleA/tests/unit/subsystemA/ClassATest.php',
+                0,
+                true
+            ],
+            'Partial lower cased wrong path without extension name doesn\'t match' => [
+                'subsystemb/classa',
+                'moduleA/tests/unit/subsystemA/ClassATest.php',
+                0,
+                false
+            ],
+            'Partial lower cased wrong path without extension name with more distance doesn\'t match' => [
+                'subsystemb/classa',
+                'moduleA/tests/unit/subsystemA/ClassATest.php',
+                1,
+                false
+            ],
+            'Partial lower cased path without extension with misspelled class name with correct distance does match' => [
+                'subsystema/clasa',
+                'moduleA/tests/unit/subsystemA/ClassATest.php',
+                1,
+                true
+            ],
+            'Partial lower cased path without extension with misspelled class name with incorrect distance doesn\'t match' => [
+                'subsystema/clasa',
+                'moduleA/tests/unit/subsystemA/ClassATest.php',
+                0,
+                false
+            ],
+        ];
+    }
+
+    /** @dataProvider findInIndexProvider */
     public function testFindInIndex(TestRequest $request, $expected) {
         $index = $this->_getFakeAppBaseDirTestIndex();
 

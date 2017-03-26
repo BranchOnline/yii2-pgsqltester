@@ -18,9 +18,6 @@ class TestFile {
     /** @var string The relative path to the test file. */
     private $_relative_path;
 
-    /** @var string The index of this test file. */
-    private $_index;
-
     /**
      * Construct a new test file.
      *
@@ -34,8 +31,9 @@ class TestFile {
     /** Extract the suite from the path. */
     private function _extractPathData() {
         $parts                = explode(DIRECTORY_SEPARATOR, $this->_relative_path);
-        $full_name            = array_pop($parts);
-        $this->_index         = $this->_buildIndexFromName($full_name);
+
+        array_pop($parts);
+
         list($suite, $module) = $this->_extractSuiteAndModule($parts);
         $this->_suite         = $suite;
         $this->_module        = $module;
@@ -64,21 +62,6 @@ class TestFile {
             $module = null;
         }
         return [$suite, $module];
-    }
-
-    /**
-     * Build the file index from the full name.
-     *
-     * @param string $full_name The full file name.
-     * @return string The file index.
-     */
-    private function _buildIndexFromName(string $full_name): string {
-        return strtolower(preg_replace('/Test.php$/', '', $full_name));
-    }
-
-    /** @return string The index of this test file. */
-    public function getIndex(): string {
-        return $this->_index;
     }
 
     /** @return null|string The suite of this test file. */

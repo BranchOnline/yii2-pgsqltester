@@ -25,7 +25,7 @@ class TestFileSearch {
         $max_string_distance = $request->getMaxStringDistance();
         while ($string_distance <= $max_string_distance) {
             foreach ($index->getFiles() as $file) {
-                if ($request->requestsName() && !static::_stringsMatch($file->getIndex(), $request->getName(), $string_distance)) {
+                if ($request->requestsName() && !static::queryMatchesPath($request->getName(), $file->getRelativePath(), $string_distance)) {
                     continue;
                 }
                 if ($request->requestsSuite() && !($file->getSuite() === $request->getSuite())) {
@@ -45,19 +45,46 @@ class TestFileSearch {
     }
 
     /**
-     * Function to check whether two strings match within a max string distance boundary.
+     * Check whether a given query string (name/path) matches the given path.
      *
-     * @param string $string1             The first string.
-     * @param string $string2             The second string.
-     * @param int    $max_string_distance The maximum allowed string distance.
-     * @return bool Whether the strings match.
+     * @param string $query The query string.
+     * @param string $path  The path to be matched.
+     * @param int $max_distance The maximum distance allowed between the file names of the query and the path. Defaults
+     * to 0 meaning an exact match.
+     * @return bool Whether the query matches the path.
      */
-    private static function _stringsMatch(string $string1, string $string2, int $max_string_distance = 0) {
-        if (0 === $max_string_distance) {
-            return $string1 === $string2;
-        } else {
-            return levenshtein($string1, $string2) <= $max_string_distance;
+    public static function queryMatchesPath(string $query, string $path, int $max_distance = 0): bool {
+        $cleaned_query = preg_replace('/test(.php)?$/', '', strtolower($query));
+        $query_parts   = explode(DIRECTORY_SEPARATOR, $cleaned_query);
+        $query_name    = array_pop($query_parts);
+
+        $cleaned_file  = preg_replace('/test(.php)?$/', '', strtolower($path));
+        $file_parts    = explode(DIRECTORY_SEPARATOR, $cleaned_file);
+        $file_name     = array_pop($file_parts);
+
+        $name_matches  = levenshtein($query_name, $file_name) <= $max_distance;
+
+        $query_path    = implode(DIRECTORY_SEPARATOR, $query_parts);
+        $file_path     = implode(DIRECTORY_SEPARATOR, $file_parts);
+
+        $path_matches  = $query_path === '' || static::_endsWith($file_path, $query_path);
+
+        return $name_matches && $path_matches;
+    }
+
+    /**
+     * Check whether haystack ends with needle.
+     *
+     * @param string $haystack The string to search in.
+     * @param string $needle   The ending string to match.
+     * @return bool Whether the haystack ends with needle.
+     */
+    private static function _endsWith(string $haystack, string $needle): bool {
+        $length = strlen($needle);
+        if ($length == 0) {
+            return true;
         }
+        return (substr($haystack, -$length) === $needle);
     }
 
 }
