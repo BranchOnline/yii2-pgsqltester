@@ -14,6 +14,15 @@ class TestLookupTest extends Unit {
         new TestLookup('/unknown/basepath');
     }
 
+    public function testLookupInExcludedDirectory() {
+        $lookup = $this->constructLookup();
+        $lookup->excludeDirectories(['moduleA']);
+
+        $batch = $lookup->lookup(new TestRequest('classa', null, 'moduleA'));
+        $this->assertTrue($batch->isEmpty());
+
+    }
+
     /** @dataProvider canRunProvider */
     public function testBatchIsCorrect($request, $expected) {
         $lookup = $this->constructLookup();

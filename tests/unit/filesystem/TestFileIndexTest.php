@@ -18,11 +18,54 @@ class TestFileIndexTest extends Unit {
     }
 
     public function testNumIndexedFiles() {
-        $indexed_files = $this->_getFakeAppBaseDirTestIndex();
+        $index = $this->_getFakeAppBaseDirTestIndex();
 
-        $this->assertSame(10, $indexed_files->getNumIndexedFiles());
-        foreach ($indexed_files->getFiles() as $file) {
+        $expected_files = [
+            static::path('/moduleA/tests/style/ClassETest.php'),
+            static::path('/moduleA/tests/unit/subsystemA/ClassATest.php'),
+            static::path('/moduleA/tests/unit/subsystemA/ClassBTest.php'),
+            static::path('/moduleA/tests/unit/subsystemA/ClassCTest.php'),
+            static::path('/moduleA/tests/unit/subsystemB/ClassBTest.php'),
+            static::path('/tests/integration/ClassATest.php'),
+            static::path('/tests/unit/subsystemA/ClassATest.php'),
+            static::path('/tests/unit/subsystemA/ClassBTest.php'),
+            static::path('/tests/unit/subsystemB/ClassCTest.php'),
+            static::path('/tests/unit/subsystemB/ClassDTest.php'),
+        ];
+
+        $actual_files = $index->getFiles();
+        $this->_assertIndexMatches($expected_files, $actual_files);
+    }
+
+    public function testExcludeModuleA() {
+        $index        = $this->_getFakeAppBaseDirTestIndex();
+        $index->setExcludeDirs(['/moduleA']);
+
+        $expected_files = [
+            static::path('/tests/integration/ClassATest.php'),
+            static::path('/tests/unit/subsystemA/ClassATest.php'),
+            static::path('/tests/unit/subsystemA/ClassBTest.php'),
+            static::path('/tests/unit/subsystemB/ClassCTest.php'),
+            static::path('/tests/unit/subsystemB/ClassDTest.php'),
+        ];
+        $actual_files = $index->getFiles();
+        $this->_assertIndexMatches($expected_files, $actual_files);
+    }
+
+    public function testExcludeAll() {
+        $index        = $this->_getFakeAppBaseDirTestIndex();
+        $index->setExcludeDirs(['/moduleA', 'tests']);
+
+        $expected_files = [];
+        $actual_files = $index->getFiles();
+        $this->_assertIndexMatches($expected_files, $actual_files);
+    }
+
+    private function _assertIndexMatches($expected_files, $actual_files) {
+        $this->assertSame(sizeof($expected_files), sizeof($actual_files));
+        foreach ($actual_files as $idx => $file) {
             $this->assertInstanceOf(TestFile::class, $file);
+            $this->assertSame($expected_files[$idx], $file->getRelativePath());
         }
     }
 
@@ -30,5 +73,16 @@ class TestFileIndexTest extends Unit {
         $base_dir = codecept_data_dir() . '_fake_app_base_dir';
         return new TestFileIndex($base_dir);
     }
+
+    protected static function path(string $path): string {
+        if (DIRECTORY_SEPARATOR === '/') {
+            return str_replace('\\', DIRECTORY_SEPARATOR, $path);
+        } elseif (DIRECTORY_SEPARATOR === '\\') {
+            return str_replace('/', DIRECTORY_SEPARATOR, $path);
+        } else {
+            return $path;
+        }
+    }
+
 
 }

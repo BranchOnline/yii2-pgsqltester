@@ -30,6 +30,16 @@ class TestLookup {
     }
 
     /**
+     * Exclude certain directories from lookup.
+     *
+     * @param string[] $exclude_dirs An array of directories to be excluded.
+     * @return void
+     */
+    public function excludeDirectories(array $exclude_dirs) {
+        $this->_index->setExcludeDirs($exclude_dirs);
+    }
+
+    /**
      * Lookup a particular test or set of tests.
      *
      * @param TestRequest $request The request specifying the test(s) to be found.

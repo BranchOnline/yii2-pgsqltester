@@ -1,6 +1,7 @@
 <?php
 
 namespace branchonline\pgsqltester\filesystem;
+use branchonline\pgsqltester\utils\StringUtil;
 
 /**
  * Search based on a given file index and request.
@@ -67,24 +68,9 @@ class TestFileSearch {
         $query_path    = implode(DIRECTORY_SEPARATOR, $query_parts);
         $file_path     = implode(DIRECTORY_SEPARATOR, $file_parts);
 
-        $path_matches  = $query_path === '' || static::_endsWith($file_path, $query_path);
+        $path_matches  = $query_path === '' || StringUtil::endsWith($file_path, $query_path);
 
         return $name_matches && $path_matches;
-    }
-
-    /**
-     * Check whether haystack ends with needle.
-     *
-     * @param string $haystack The string to search in.
-     * @param string $needle   The ending string to match.
-     * @return bool Whether the haystack ends with needle.
-     */
-    private static function _endsWith(string $haystack, string $needle): bool {
-        $length = strlen($needle);
-        if ($length == 0) {
-            return true;
-        }
-        return (substr($haystack, -$length) === $needle);
     }
 
 }
