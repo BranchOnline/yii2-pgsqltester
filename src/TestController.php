@@ -344,11 +344,26 @@ class TestController extends Controller {
             if ($file != '.' && $file != '..') {
                 $parts = explode('.', $file);
                 if (($parts[1] ?? '') === 'php') {
-                    $migration_files[] = $parts[0];
+                    $migration_files[$parts[0]] = $parts[0];
                 }
             }
         }
-        sort($migration_files);
+
+        $migration_namespaces = Yii::$app->controllerMap['migrate']['migrationNamespaces'] ?? [];
+        foreach ($migration_namespaces as $namespace) {
+            $namespace_path = str_replace('/', DIRECTORY_SEPARATOR, Yii::getAlias('@' . str_replace('\\', '/', $namespace)));
+            $namespace_dir = opendir($namespace_path);
+            while (false !== ($file = readdir($namespace_dir))) {
+                if ($file != '.' && $file != '..') {
+                    $parts = explode('.', $file);
+                    if (($parts[1] ?? '') === 'php') {
+                        $migration_files[$parts[0]] = $namespace . '\\' . $parts[0];
+                    }
+                }
+            }
+        }
+
+        ksort($migration_files);
 
         try {
             $applied_migrations = (new Query())
@@ -362,6 +377,7 @@ class TestController extends Controller {
 
         return ([] === array_diff($migration_files, $applied_migrations))
             && ([] === array_diff($applied_migrations, $migration_files));
+
     }
 
     /**
