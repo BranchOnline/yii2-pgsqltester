@@ -301,7 +301,7 @@ class TestController extends Controller {
      */
     public function actionPrepareDb($force = false): bool {
         try {
-            $migration_namespaces = Yii::$app->controllerMap['migrate']['migrationNamespaces'] ?? null;
+            $migration_namespaces = Yii::$app->controllerMap['migrate']['migrationNamespaces'] ?? [];
             $migration_controller = new MigrateController('migrate', Yii::$app, [
                 'migrationNamespaces' => $migration_namespaces,
             ]);
