@@ -59,7 +59,7 @@ class TestFileIndex {
     /** @return TestFile[] The set of TestFile instances indexed by this index. */
     public function getFiles(): array {
         if (!is_array($this->_files)) {
-            $this->_files = $this->_indexFiles();
+            $this->_files = $this->_indexFiles($this->_base_dir);
         }
         return $this->_files;
     }
@@ -76,26 +76,18 @@ class TestFileIndex {
     /**
      * Creates an array of TestFiles relative to the base directory.
      *
-     * @param string $base_dir     The base directory of the file index.
-     * @param array  $exclude_dirs List of directories to be excluded from the index.
+     * @param string $dir The base directory of the file index.
      * @return TestFile[] The list of test files.
      */
-    private function _indexFiles(): array {
-        $iterator = new RecursiveIteratorIterator(
-            new RecursiveDirectoryIterator($this->_base_dir, RecursiveDirectoryIterator::SKIP_DOTS)
-        );
+    private function _indexFiles(string $dir): array {
+        $directory = new RecursiveDirectoryIterator($dir, RecursiveDirectoryIterator::SKIP_DOTS);
+        $filter = new TestDirFilter($directory, $this->_exclude_dirs);
+        $filtered_iterator = new RecursiveIteratorIterator($filter);
 
-        $files = [];
-        foreach ($iterator as $file){
-            /** @var SplFileInfo $file */
-            if ($this->_isPathExcluded($file->getPath())) {
-                continue;
-            }
-            if (1 === preg_match('/Test.php$/', $file->getBaseName())) {
-                $relative_path = str_replace($this->_base_dir, '', $file->getPathName());
-                $test_file = new TestFile($relative_path);
-                $files[] = $test_file;
-            }
+        foreach ($filtered_iterator as $file) {
+            $relative_path = str_replace($this->_base_dir, '', $file->getPathName());
+            $test_file = new TestFile($relative_path);
+            $files[] = $test_file;
         }
 
         usort($files, function($a, $b) {
@@ -103,30 +95,6 @@ class TestFileIndex {
         });
 
         return $files;
-    }
-
-    /**
-     * Determine whether the given file is in one of the exlcuded directories.
-     *
-     * @param string $path The path to be verified.
-     * @return bool Whether the path is excluded.
-     */
-    private function _isPathExcluded(string $path): bool {
-        if ($this->_exclude_dirs === []) {
-            return false;
-        }
-        $file_path = ltrim(str_replace($this->_base_dir, '', $path), DIRECTORY_SEPARATOR);
-        foreach ($this->_exclude_dirs as $exclude_dir) {
-            if (StringUtil::startsWith($exclude_dir, static::MATCH_ANY_SUBDIR)) {
-                $actual_dir = ltrim($exclude_dir, static::MATCH_ANY_SUBDIR);
-                if (StringUtil::contains($file_path, $actual_dir)) {
-                    return true;
-                }
-            } elseif (StringUtil::startsWith($file_path, $exclude_dir)) {
-                return true;
-            }
-        }
-        return false;
     }
 
 }

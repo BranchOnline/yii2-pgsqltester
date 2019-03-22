@@ -56,6 +56,8 @@ class TestController extends Controller {
     /** @var bool Whether to run in silent mode (no output will be shown) */
     public $silent = false;
 
+    public $exclude_dirs = [];
+
     /** @inheritdoc */
     public function options($actionID) {
         switch ($actionID) {
@@ -155,8 +157,8 @@ class TestController extends Controller {
      * @return TestLookup New test lookup instance.
      */
     private function _createTestLookup() {
-        $lookup = new TestLookup(Yii::getAlias('@app'));
-        $lookup->excludeDirectories([TestFileIndex::MATCH_ANY_SUBDIR . 'vendor']);
+        $lookup = new TestLookup(dirname(Yii::$app->request->getScriptFile()));
+        $lookup->excludeDirectories($this->exclude_dirs);
         return $lookup;
     }
 
