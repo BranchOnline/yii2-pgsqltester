@@ -413,9 +413,12 @@ class TestController extends Controller {
         $username    = Yii::$app->config_db->username;
         $schema_file = 'schema.sql';
 
+        preg_match('/host=(.+?);/', Yii::$app->config_db->dsn, $matches);
+        $host = $matches[1];
+        
         $dump_command = strtr('PGPASSWORD=":password" pg_dump -d :database -h :host -p :port -U :user -s > :schema_file', [
             ':database'    => $this->testing_template_db,
-            ':host'        => 'localhost',
+            ':host'        => $host,
             ':port'        => 5432,
             ':user'        => $username,
             ':password'    => $password,
@@ -424,7 +427,7 @@ class TestController extends Controller {
 
         $setup_command = strtr('PGPASSWORD=":password" psql -v ON_ERROR_STOP=1 -h :host -p :port -U :user -w :database < :schema_file', [
             ':database'    => $this->testing_db,
-            ':host'        => 'localhost',
+            ':host'        => $host,
             ':port'        => 5432,
             ':user'        => $username,
             ':password'    => $password,
