@@ -440,6 +440,7 @@ class TestController extends Controller {
         print_r("Test database created!\n");
         print_r("Unlinking: $schema_file");
         unlink($schema_file);
+        print_r("Done!");
     }
 
 }
