@@ -118,7 +118,7 @@ class TestController extends Controller {
      * @return void
      */
     public function actionRun($test_class = '', $test_function = '') {
-        if ($this->actionPrepareDb()) {
+        if ($this->actionPrepareDb() === 0) {
             $lookup      = $this->_createTestLookup();
             $request     = $this->_createTestRequest($test_class, $this->suite, $this->for_module);
             $constructor = $this->runInteractiveTestRequest($lookup, $request);
@@ -299,9 +299,9 @@ class TestController extends Controller {
      *
      * @param bool $force Whether to force preparing the database, even if the database is already in the current
      * migration state.
-     * @return bool Whether preparing the database was successful.
+     * @return int Whether preparing the database was successful.
      */
-    public function actionPrepareDb($force = false): bool {
+    public function actionPrepareDb($force = false): int {
         try {
             $migration_namespaces = Yii::$app->controllerMap['migrate']['migrationNamespaces'] ?? [];
             $migration_controller = new MigrateController('migrate', Yii::$app, [
@@ -313,7 +313,7 @@ class TestController extends Controller {
             } else {
                 print_r("Test database already in correct state.\n");
             }
-            return true;
+            return 0;
         } catch (Exception $ex) {
             print_r("There was an error when preparing the test database.\n");
             $code = $ex->getCode();
@@ -322,7 +322,7 @@ class TestController extends Controller {
             } else {
                 print_r($ex->getMessage());
             }
-            return false;
+            return -1;
         }
     }
 
@@ -438,8 +438,8 @@ class TestController extends Controller {
         exec($dump_command);
         exec($setup_command);
         print_r("Test database created!\n");
-        print_r("Unlinking: $schema_file");
-        // unlink($schema_file);
+        print_r("Unlinking: $schema_file \n");
+        unlink($schema_file);
         print_r("Done!");
     }
 
