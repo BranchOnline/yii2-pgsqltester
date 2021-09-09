@@ -93,6 +93,7 @@ class TestController extends Controller {
         if (!Yii::$app->has('db')) {
             throw new InvalidConfigException('No database component configured for \'db\'.');
         }
+
         $this->defaultAction = 'run';
     }
 
@@ -117,7 +118,8 @@ class TestController extends Controller {
      * @param string $test_function The name of the test function that you want to run.
      * @return void
      */
-    public function actionRun($test_class = '', $test_function = '') {
+    public function actionRun($test_class = '', $test_function = ''): int {
+        $return_val = 1;
         if ($this->actionPrepareDb() === 0) {
             $lookup      = $this->_createTestLookup();
             $request     = $this->_createTestRequest($test_class, $this->suite, $this->for_module);
@@ -126,11 +128,10 @@ class TestController extends Controller {
                 $constructor->setFunction($test_function);
                 $command = $constructor->getCommand();
                 print_r('About to run \'' . $command . "'\n\n'");
-                passthru($command);
-            } else {
-                exit();
+                passthru($command, $return_val);
             }
         }
+        return $return_val;
     }
 
     /**
@@ -399,6 +400,7 @@ class TestController extends Controller {
      */
     protected function prepareDb(Controller $migration_controller) {
         Yii::$app->db->close();
+
         Yii::$app->config_db->createCommand('DROP DATABASE IF EXISTS ' . $this->testing_template_db)->execute();
         Yii::$app->config_db->createCommand('DROP DATABASE IF EXISTS ' . $this->testing_db)->execute();
         Yii::$app->config_db->createCommand('CREATE DATABASE ' . $this->testing_template_db)->execute();
@@ -415,7 +417,7 @@ class TestController extends Controller {
 
         preg_match('/host=(.+?);/', Yii::$app->config_db->dsn, $matches);
         $host = $matches[1];
-        
+
         $dump_command = strtr('PGPASSWORD=":password" pg_dump -d :database -h :host -p :port -U :user -s > :schema_file', [
             ':database'    => $this->testing_template_db,
             ':host'        => $host,
@@ -435,8 +437,10 @@ class TestController extends Controller {
         ]);
 
         print_r("Creating test database...\n");
+
         exec($dump_command);
         exec($setup_command);
+
         print_r("Test database created!\n");
         print_r("Unlinking: $schema_file \n");
         @unlink($schema_file);
