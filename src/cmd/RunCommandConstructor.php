@@ -15,33 +15,53 @@ class RunCommandConstructor implements CodeceptCommandConstructor {
     /**
      * Construct a new codecept build command.
      *
-     * @param string|null  $module   The module on which to run the tests. Leave null to use all modules.
-     * @param string|null  $suite    The suite on which to run the tests. Leave null to use all suites.
-     * @param string|null  $file     The test file to run. Leave null to run all files in selected suite/modules.
-     * @param string|null  $function The test function to run. Leave null to run all functions in selected file(s).
-     * @param bool         $coverage Whether to output html coverage.
-     * @param bool         $silent   Whether to build silently.
+     * @param string|null  $module    The module on which to run the tests. Leave null to use all modules.
+     * @param string|null  $suite     The suite on which to run the tests. Leave null to use all suites.
+     * @param string|null  $file      The test file to run. Leave null to run all files in selected suite/modules.
+     * @param string|null  $function  The test function to run. Leave null to run all functions in selected file(s).
+     * @param bool         $coverage  Whether to output html coverage.
+     * @param bool         $silent    Whether to build silently.
+     * @param bool         $fail_fast Whether to exit on first failure.
+     *
      */
-    public function __construct($module = null, $suite = null, $file = null, $function = null, $coverage = false, bool $silent = false) {
+    public function __construct(
+        $module = null,
+        $suite = null,
+        $file = null,
+        $function = null,
+        bool $coverage = false,
+        bool $silent = false,
+        bool $fail_fast = false
+    ) {
         $this->_builder = new CodeceptCommandBuilder();
         $this->_builder->executeAction('run');
+
         if (is_string($module) && $module !== '') {
             $this->_builder->onModule($module);
         }
+
         if (is_string($suite) && $suite !== '') {
             $this->_builder->onSuite($suite);
         }
+
         if (is_string($file) && $file !== '') {
             $this->_builder->onFile($file);
         }
+
         if (is_string($function) && $function !== '') {
             $this->_builder->onFunction($function);
         }
+
         if ($coverage) {
             $this->_builder->outputHtmlCoverage();
         }
+
         if ($silent) {
             $this->_builder->beSilent();
+        }
+
+        if ($fail_fast) {
+            $this->_builder->failFast();
         }
     }
 

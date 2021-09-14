@@ -15,6 +15,9 @@ class CodeceptCommandBuilder {
     /** @var bool Whether to run composer in verbose mode. */
     private $_verbose = true;
 
+    /** @var bool Whether to exit after first failure. */
+    private $_fail_fast = false;
+
     /** @var string|false The coverage, if false use no coverage, else use the coverage type as given by this var. */
     private $_coverage = false;
 
@@ -38,6 +41,11 @@ class CodeceptCommandBuilder {
     /** Disable verbose composer output. */
     public function beSilent() {
         $this->_verbose = false;
+    }
+
+    /** Disable verbose composer output. */
+    public function failFast() {
+        $this->_fail_fast = true;
     }
 
     /** @param string $suite Specify the suite to be put into the command. */
@@ -86,9 +94,11 @@ class CodeceptCommandBuilder {
     /** @return array A list with the optstring parts (part after the --) */
     private function _getOptstringParts() {
         $command_parts = [];
+
         if (false !== $this->_module) {
             $command_parts[] = '-c ' . $this->_module;
         }
+
         if (false !== $this->_file) {
             if (false !== $this->_function) {
                 $command_parts[] = $this->_file . '::' . $this->_function;
@@ -96,9 +106,15 @@ class CodeceptCommandBuilder {
                 $command_parts[] = $this->_file;
             }
         }
+
+        if ($this->_fail_fast) {
+            $command_parts[] = '--fail-fast';
+        }
+
         if (false !== ($coverage_type = $this->_coverage)) {
             $command_parts[] = "--coverage-$coverage_type";
         }
+
         return $command_parts;
     }
 
@@ -108,9 +124,11 @@ class CodeceptCommandBuilder {
         if ($this->_verbose) {
             $command_parts[] = '-v';
         }
+
         if (false !== $this->_suite) {
             $command_parts[] = $this->_suite;
         }
+
         return $command_parts;
     }
 
