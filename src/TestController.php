@@ -56,13 +56,16 @@ class TestController extends Controller {
     /** @var bool Whether to run in silent mode (no output will be shown) */
     public $silent = false;
 
+    /** @var bool Whether to exit on first failed test */
+    public $fail_fast = false;
+
     public $exclude_dirs = [];
 
     /** @inheritdoc */
     public function options($actionID) {
         switch ($actionID) {
             case 'run':
-                return ['suite', 'for_module', 'coverage', 'silent'];
+                return ['suite', 'for_module', 'coverage', 'silent', 'fail_fast'];
             case 'build':
                 return ['silent'];
             default:
@@ -120,17 +123,21 @@ class TestController extends Controller {
      */
     public function actionRun($test_class = '', $test_function = ''): int {
         $return_val = 1;
+
         if ($this->actionPrepareDb() === 0) {
             $lookup      = $this->_createTestLookup();
             $request     = $this->_createTestRequest($test_class, $this->suite, $this->for_module);
             $constructor = $this->runInteractiveTestRequest($lookup, $request);
+
             if ($constructor instanceof RunCommandConstructor) {
                 $constructor->setFunction($test_function);
                 $command = $constructor->getCommand();
+
                 print_r('About to run \'' . $command . "'\n\n'");
                 passthru($command, $return_val);
             }
         }
+
         return $return_val;
     }
 
