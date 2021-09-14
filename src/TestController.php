@@ -116,7 +116,7 @@ class TestController extends Controller {
      * @param string $test_class    The name of the test class that you want to run. You are allowed to use the
      * model name directly if it can be unambiguously resolved to a class path.
      * @param string $test_function The name of the test function that you want to run.
-     * @return void
+     * @return int The exit code.
      */
     public function actionRun($test_class = '', $test_function = ''): int {
         $return_val = 1;
