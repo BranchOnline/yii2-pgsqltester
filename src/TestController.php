@@ -2,21 +2,21 @@
 
 namespace branchonline\pgsqltester;
 
+use Yii;
+use yii\base\InvalidCallException;
+use yii\base\InvalidConfigException;
+// use yii\base\InvalidParamException;
+use yii\db\Query;
+use yii\db\Exception;
+use yii\helpers\Console;
+use yii\console\Controller;
+use yii\console\controllers\MigrateController;
 use branchonline\pgsqltester\cmd\BuildCommandConstructor;
 use branchonline\pgsqltester\cmd\RunCommandConstructor;
 use branchonline\pgsqltester\filesystem\TestBatch;
-use branchonline\pgsqltester\filesystem\TestFileIndex;
 use branchonline\pgsqltester\filesystem\TestLookup;
 use branchonline\pgsqltester\filesystem\TestRequest;
-use yii\base\InvalidCallException;
-use yii\base\InvalidConfigException;
-use yii\base\InvalidParamException;
-use yii\console\Controller;
-use yii\console\controllers\MigrateController;
-use yii\db\Exception;
-use yii\db\Query;
-use Yii;
-use yii\helpers\Console;
+// use branchonline\pgsqltester\filesystem\TestFileIndex;
 
 /**
  * The test controller is used to set up a new empty testing database and run tests on it. This guarantees that the
@@ -180,27 +180,42 @@ class TestController extends Controller {
     private function runInteractiveTestRequest(TestLookup $lookup, TestRequest $request) {
         $test_batch = $lookup->lookup($request);
         $error      = false;
+
         while (!$test_batch->canRun()) {
             if ($test_batch->isEmpty()) {
                 $error = $this->_interactiveBroadenScope($request);
+
             } elseif ($test_batch->hasMultipleFilesToRun()) {
                 $error = $this->_interactiveFileSelect($test_batch, $request);
+
             } elseif ($test_batch->hasConflictingModules()) {
                 $error = $this->_interactiveModuleSelect($test_batch, $request);
+
             }
+
             if ($error) {
                 break;
             }
+
             $test_batch = $lookup->lookup($request);
         }
+
         $module   = $test_batch->getModulesToRun()[0] ?? null;
         $suite    = $test_batch->getSuitesToRun()[0] ?? null;
         $path     = $test_batch->getFilesToRun()[0] ?? null;
+
         if ($error) {
             return false;
         } else {
-            $constructor = new RunCommandConstructor($module, $suite, $path, null, $this->coverage, $this->silent);
-            return $constructor;
+            return new RunCommandConstructor(
+                $module,
+                $suite,
+                $path,
+                null,
+                $this->coverage,
+                $this->silent,
+                $this->fail_fast
+            );
         }
     }
 

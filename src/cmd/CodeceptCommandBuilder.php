@@ -43,7 +43,7 @@ class CodeceptCommandBuilder {
         $this->_verbose = false;
     }
 
-    /** Disable verbose composer output. */
+    /** Enable exit on first failure. */
     public function failFast() {
         $this->_fail_fast = true;
     }
@@ -91,33 +91,6 @@ class CodeceptCommandBuilder {
         return $this->_formatCommand($final_parts);
     }
 
-    /** @return array A list with the optstring parts (part after the --) */
-    private function _getOptstringParts() {
-        $command_parts = [];
-
-        if (false !== $this->_module) {
-            $command_parts[] = '-c ' . $this->_module;
-        }
-
-        if (false !== $this->_file) {
-            if (false !== $this->_function) {
-                $command_parts[] = $this->_file . '::' . $this->_function;
-            } else {
-                $command_parts[] = $this->_file;
-            }
-        }
-
-        if ($this->_fail_fast) {
-            $command_parts[] = '--fail-fast';
-        }
-
-        if (false !== ($coverage_type = $this->_coverage)) {
-            $command_parts[] = "--coverage-$coverage_type";
-        }
-
-        return $command_parts;
-    }
-
     /** @return array A list with all the command parts (part before the --) */
     private function _getCommandParts(): array {
         $command_parts = ['composer', 'exec', 'codecept', $this->_action];
@@ -130,6 +103,33 @@ class CodeceptCommandBuilder {
         }
 
         return $command_parts;
+    }
+
+    /** @return array A list with the optstring parts (part after the --) */
+    private function _getOptstringParts() {
+        $optstring_parts = [];
+
+        if (false !== $this->_module) {
+            $optstring_parts[] = '-c ' . $this->_module;
+        }
+
+        if (false !== $this->_file) {
+            if (false !== $this->_function) {
+                $optstring_parts[] = $this->_file . '::' . $this->_function;
+            } else {
+                $optstring_parts[] = $this->_file;
+            }
+        }
+
+        if (false !== $this->_fail_fast) {
+            $optstring_parts[] = "--fail-fast";
+        }
+
+        if (false !== ($coverage_type = $this->_coverage)) {
+            $optstring_parts[] = "--coverage-$coverage_type";
+        }
+
+        return $optstring_parts;
     }
 
     /**
